@@ -493,7 +493,7 @@ int main() {
         MUIZENBERG,
         KOMMETJIE,
         SCARBOROUGH,
-        CASTLE_ROCK,
+        HOUT_BAY,
         CAPE_POINT,
         Count
     };
@@ -503,91 +503,93 @@ int main() {
             .name = "Fish Hoek",
             .shortName = "FH",
             .roads = {
-                { .to = NOORDHOEK, .weight = 120 },
-                { .to = SIMONS_TOWN, .weight = 120 }
+                { .to = NOORDHOEK, .weight = 9 },
+                { .to = GLENCAIRN, .weight = 5 },
+                { .to = KALK_BAY, .weight = 3 },
+                { .to = KOMMETJIE, .weight = 10 }
             }
         },
         {
             .name = "Noordhoek",
             .shortName = "N",
             .roads = {
-                { .to = FISH_HOEK, .weight =  120 },
-                { .to = KOMMETJIE, .weight = 120 },
-                { .to = GLENCAIRN, .weight = 120 }
+                { .to = FISH_HOEK, .weight =  9 },
+                { .to = KOMMETJIE, .weight = 10 },
+                { .to = GLENCAIRN, .weight = 10 },
+                { .to = MUIZENBERG, .weight = 19 },
+                { .to = HOUT_BAY, .weight = 13 }
             }
         },
         {
             .name = "Simon's Town",
             .shortName = "ST",
             .roads = {
-                { .to = GLENCAIRN, .weight = 120 },
-                { .to = SCARBOROUGH, .weight = 120 },
-                { .to = CASTLE_ROCK, .weight = 120 },
-                { .to = MUIZENBERG, .weight = 120 }
+                { .to = GLENCAIRN, .weight = 4 },
+                { .to = SCARBOROUGH, .weight = 13 }
             }
         },
         {
             .name = "Glencairn",
             .shortName = "G",
             .roads = {
-                { .to = FISH_HOEK, .weight = 120 },
-                { .to = SIMONS_TOWN, .weight = 120 },
-                { .to = KOMMETJIE, .weight = 120 },
-                { .to = CASTLE_ROCK, .weight = 120 },
-                { .to = CAPE_POINT, .weight = 120 }
+                { .to = FISH_HOEK, .weight = 5 },
+                { .to = NOORDHOEK, .weight = 10 },
+                { .to = SIMONS_TOWN, .weight = 4 },
+                { .to = KOMMETJIE, .weight = 13 },
+                { .to = SCARBOROUGH, .weight = 13 }
             }
         },
         {
             .name = "Kalk Bay",
             .shortName = "KB",
             .roads = {
-                { .to = FISH_HOEK, .weight = 120 },
-                { .to = MUIZENBERG, .weight = 120 }
+                { .to = FISH_HOEK, .weight = 3 },
+                { .to = MUIZENBERG, .weight = 5 }
             }
         },
         {
             .name = "Muizenberg",
             .shortName = "M",
             .roads = {
-                { .to = KALK_BAY, .weight = 120 },
-                { .to = NOORDHOEK, .weight = 120 }
+                { .to = NOORDHOEK, .weight = 19 },
+                { .to = KALK_BAY, .weight = 5 },
+                { .to = HOUT_BAY, .weight = 23 }
             }
         },
         {
             .name = "Kommetjie",
             .shortName = "K",
             .roads = {
-                { .to = FISH_HOEK, .weight = 120 },
-                { .to = NOORDHOEK, .weight = 120 },
-                { .to = SCARBOROUGH, .weight = 120 }
+                { .to = FISH_HOEK, .weight = 10 },
+                { .to = NOORDHOEK, .weight = 10 },
+                { .to = GLENCAIRN, .weight = 13 },
+                { .to = SCARBOROUGH, .weight = 10 }
             }
         },
         {
             .name = "Scarborough",
             .shortName = "S",
             .roads = {
-                { .to = KOMMETJIE, .weight = 120 },
-                { .to = GLENCAIRN, .weight = 120 },
-                { .to = SIMONS_TOWN, .weight = 120 },
-                { .to = CAPE_POINT, .weight = 120 }
+                { .to = KOMMETJIE, .weight = 10 },
+                { .to = GLENCAIRN, .weight = 13 },
+                { .to = SIMONS_TOWN, .weight = 13 }
             }
         },
-        // SCARBOROUGH
         {
-            .name = "Castle Rock",
+            .name = "Smit Winkel Bay",
             .shortName = "CR",
             .roads = {
-                { .to = SIMONS_TOWN, .weight = 120 },
-                { .to = SCARBOROUGH, .weight = 120 },
+                { .to = SIMONS_TOWN, .weight = 10 },
+                { .to = SCARBOROUGH, .weight = 13 },
                 { .to = CAPE_POINT, .weight = 120 }
             }
         },
         {
-            .name = "Cape Point",
-            .shortName = "CP",
+            .name = "Hout Bay",
+            .shortName = "HB",
             .roads = {
-                { .to = CASTLE_ROCK, .weight = 120 },
-                { .to = SCARBOROUGH, .weight = 120 }
+                { .to = NOORDHOEK, .weight = 13 },
+                { .to = MUIZENBERG, .weight = 23 }
             }
         }
     });

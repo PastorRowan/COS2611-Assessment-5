@@ -5,4 +5,6 @@
 g++ 25939831_FPP.cpp -o 25939831_FPP.exe
 
 :: Run 25939831_FPP.exe
-25939831_FPP.exe
+if %ERRORLEVEL% EQU 0 (
+    25939831_FPP.exe
+)

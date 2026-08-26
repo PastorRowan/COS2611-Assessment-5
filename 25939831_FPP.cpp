@@ -12,6 +12,7 @@ Please see my github repo for more info: https://github.com/PastorRowan/COS2611-
 #include <iostream>
 #include <string>
 #include <random>
+#include <algorithm>
 #include <vector>
 #include <cstdlib>
 #include <regex>
@@ -148,40 +149,43 @@ enum LocationIndex {
     KOMMETJIE,
     SCARBOROUGH,
     HOUT_BAY,
+    SMIT_WINKEL_BAY,
     LocationIndexCount
 };
 
-const std::string locationIndexToName(LocationIndex locationIndex) {
+constexpr const char* locationIndexNameMap[LocationIndexCount] = {
+    "Fish Hoek",
+    "Noordhoek",
+    "Simon's Town",
+    "Glencairn",
+    "Kalk Bay",
+    "Muizenberg",
+    "Kommetjie",
+    "Scarborough",
+    "Hout Bay",
+    "Smit Winkel Bay"
+};
 
-    constexpr const char* locationIndexNameMap[LocationIndexCount] = {
-        "Fish Hoek",
-        "Noordhoek",
-        "Simon's Town",
-        "Glencairn",
-        "Kalk Bay",
-        "Muizenberg",
-        "Kommetjie",
-        "Scarborough",
-        "Hout Bay"
-    };
+const std::string locationIndexToName(LocationIndex locationIndex) {
 
     return locationIndexNameMap[static_cast<int>(locationIndex)];
 
 };
 
-const std::string locationIndexToShortName(LocationIndex locationIndex) {
+constexpr const char* locationIndexShortNameMap[LocationIndexCount] = {
+    "FH",
+    "N",
+    "ST",
+    "G",
+    "KB",
+    "M",
+    "K",
+    "S",
+    "HB",
+    "SWB"
+};
 
-    constexpr const char* locationIndexShortNameMap[LocationIndexCount] = {
-        "FH",
-        "N",
-        "ST",
-        "G",
-        "KB",
-        "M",
-        "K",
-        "S",
-        "HB"
-    };
+const std::string locationIndexToShortName(LocationIndex locationIndex) {
 
     return locationIndexShortNameMap[static_cast<int>(locationIndex)];
 
@@ -319,6 +323,18 @@ class Incident {
 
         };
 
+        const State& getState() const {
+            return state;
+        };
+
+        friend bool operator<(const Incident& left, const Incident& right) {
+            if (left.state.severity != right.state.severity) {
+                return left.state.severity < right.state.severity;
+            } else {
+                return left.state.id > right.state.id;
+            };
+        };
+
 };
 
 struct Road {
@@ -341,16 +357,30 @@ class RoadNetwork {
 
     private:
 
-        const Locations locations;
+        Locations locations;
 
     public:
 
-        RoadNetwork(
-            const Locations locationsP
-        ): locations(locationsP) {};
+        RoadNetwork(Locations locationsP): locations(locationsP) {};
 
         const Locations& getLocations() const {
             return locations;
+        };
+
+        void addLocation(const Location location) {
+            locations.push_back(location);
+        };
+
+        bool isValid() const {
+            for (const auto& currentLocation : locations) {
+                const Roads& currentRoads = currentLocation.roads;
+                for (const auto& currentRoad : currentRoads) {
+                    if (currentRoad.to >= locations.size()) {
+                        return false;
+                    };
+                };
+            };
+            return true;
         };
 
         bool isLocationIndexStringValid (
@@ -641,12 +671,68 @@ std::string RoadNetwork::shortestPathToString(
 
 };
 
+typedef std::vector<Incident> Incidents;
+
+std::string incidentsToString(const Incidents& incidents) {
+
+    const unsigned int
+        ID_WIDTH = 5,
+        LOCATION_WIDTH = 20,
+        CATEGORY_WIDTH = 20,
+        SEVERITY_WIDTH = 10,
+        STATUS_WIDTH = 10
+    ;
+
+    std::string incidentsString = "";
+
+    for (const auto& incident : incidents) {
+        incidentsString += incident.toString(
+            ID_WIDTH,
+            LOCATION_WIDTH,
+            CATEGORY_WIDTH,
+            SEVERITY_WIDTH,
+            STATUS_WIDTH
+        ) + '\n';
+    };
+
+    std::ostringstream output;
+
+    output
+        << std::left
+        << std::setw(ID_WIDTH) << "id"
+        << std::setw(LOCATION_WIDTH) << "location"
+        << std::setw(CATEGORY_WIDTH) << "category"
+        << std::setw(SEVERITY_WIDTH) << "severity"
+        << std::setw(STATUS_WIDTH) << "status" << std::endl
+        << incidentsString << std::endl
+    ;
+
+    return output.str();
+
+};
+
 int main() {
+    /*
+    enum LocationIndex {
+        FISH_HOEK,
+        NOORDHOEK,
+        SIMONS_TOWN,
+        GLENCAIRN,
+        KALK_BAY,
+        MUIZENBERG,
+        KOMMETJIE,
+        SCARBOROUGH,
+        HOUT_BAY,
+        SMIT_WINKEL_BAY,
+        LocationIndexCount
+    };
+    */
 
     RoadNetwork roadNetwork({
         {
-            .name = "Fish Hoek",
-            .shortName = "FH",
+            .id = FISH_HOEK,
+            .name = locationIndexToName(FISH_HOEK),
+            .shortName = locationIndexToShortName(FISH_HOEK),
             .roads = {
                 { .to = NOORDHOEK, .weight = 12 },
                 { .to = GLENCAIRN, .weight = 7 },
@@ -655,8 +741,9 @@ int main() {
             }
         },
         {
-            .name = "Noordhoek",
-            .shortName = "N",
+            .id = NOORDHOEK,
+            .name = locationIndexToName(NOORDHOEK),
+            .shortName = locationIndexToShortName(NOORDHOEK),
             .roads = {
                 { .to = FISH_HOEK, .weight =  12 },
                 { .to = KOMMETJIE, .weight = 14 },
@@ -666,35 +753,41 @@ int main() {
             }
         },
         {
-            .name = "Simon's Town",
-            .shortName = "ST",
+            .id = SIMONS_TOWN,
+            .name = locationIndexToName(SIMONS_TOWN),
+            .shortName = locationIndexToShortName(SIMONS_TOWN),
             .roads = {
                 { .to = GLENCAIRN, .weight = 6 },
-                { .to = SCARBOROUGH, .weight = 18 }
+                { .to = SCARBOROUGH, .weight = 18 },
+                { .to = SMIT_WINKEL_BAY, .weight = 14 }
             }
         },
         {
-            .name = "Glencairn",
-            .shortName = "G",
+            .id = GLENCAIRN,
+            .name = locationIndexToName(GLENCAIRN),
+            .shortName = locationIndexToShortName(GLENCAIRN),
             .roads = {
                 { .to = FISH_HOEK, .weight = 7 },
                 { .to = NOORDHOEK, .weight = 14 },
                 { .to = SIMONS_TOWN, .weight = 6 },
                 { .to = KOMMETJIE, .weight = 18 },
-                { .to = SCARBOROUGH, .weight = 18 }
+                { .to = SCARBOROUGH, .weight = 18 },
+                { .to = SMIT_WINKEL_BAY, .weight = 24 }
             }
         },
         {
-            .name = "Kalk Bay",
-            .shortName = "KB",
+            .id = KALK_BAY,
+            .name = locationIndexToName(KALK_BAY),
+            .shortName = locationIndexToShortName(KALK_BAY),
             .roads = {
                 { .to = FISH_HOEK, .weight = 4 },
                 { .to = MUIZENBERG, .weight = 7 }
             }
         },
         {
-            .name = "Muizenberg",
-            .shortName = "M",
+            .id = MUIZENBERG,
+            .name = locationIndexToName(MUIZENBERG),
+            .shortName = locationIndexToShortName(MUIZENBERG),
             .roads = {
                 { .to = NOORDHOEK, .weight = 26 },
                 { .to = KALK_BAY, .weight = 7 },
@@ -702,8 +795,9 @@ int main() {
             }
         },
         {
-            .name = "Kommetjie",
-            .shortName = "K",
+            .id = KOMMETJIE,
+            .name = locationIndexToName(KOMMETJIE),
+            .shortName = locationIndexToShortName(KOMMETJIE),
             .roads = {
                 { .to = FISH_HOEK, .weight = 14 },
                 { .to = NOORDHOEK, .weight = 14 },
@@ -712,28 +806,33 @@ int main() {
             }
         },
         {
-            .name = "Scarborough",
-            .shortName = "S",
+            .id = SCARBOROUGH,
+            .name = locationIndexToName(SCARBOROUGH),
+            .shortName = locationIndexToShortName(SCARBOROUGH),
             .roads = {
                 { .to = KOMMETJIE, .weight = 14 },
                 { .to = GLENCAIRN, .weight = 18 },
-                { .to = SIMONS_TOWN, .weight = 18 }
+                { .to = SIMONS_TOWN, .weight = 18 },
+                { .to = SMIT_WINKEL_BAY, .weight = 18 }
             }
         },
         {
-            .name = "Smit Winkel Bay",
-            .shortName = "CR",
-            .roads = {
-                { .to = SIMONS_TOWN, .weight = 14 },
-                { .to = SCARBOROUGH, .weight = 18 }
-            }
-        },
-        {
-            .name = "Hout Bay",
-            .shortName = "HB",
+            .id = HOUT_BAY,
+            .name = locationIndexToName(HOUT_BAY),
+            .shortName = locationIndexToShortName(HOUT_BAY),
             .roads = {
                 { .to = NOORDHOEK, .weight = 18 },
                 { .to = MUIZENBERG, .weight = 31 }
+            }
+        },
+        {
+            .id = SMIT_WINKEL_BAY,
+            .name = locationIndexToName(SMIT_WINKEL_BAY),
+            .shortName = locationIndexToShortName(SMIT_WINKEL_BAY),
+            .roads = {
+                { .to = GLENCAIRN, .weight = 24 },
+                { .to = SIMONS_TOWN, .weight = 14 },
+                { .to = SCARBOROUGH, .weight = 18 }
             }
         }
     });
@@ -753,7 +852,7 @@ int main() {
     };
 
     IdGenerator incidentIdGenerator;
-    std::vector<Incident> incidents = {};
+    Incidents incidents = {};
     incidents.reserve(NUMBER_OF_INCIDENTS);
 
     for (unsigned int i = 0; i < NUMBER_OF_INCIDENTS; ++i) {
@@ -825,43 +924,14 @@ int main() {
             };
             case '2': {
 
-                const unsigned int
-                    ID_WIDTH = 5,
-                    LOCATION_WIDTH = 20,
-                    CATEGORY_WIDTH = 20,
-                    SEVERITY_WIDTH = 10,
-                    STATUS_WIDTH = 10
+                const std::string DISPLAY_INCIDENTS_MENU =
+                    HEADER +
+                    "========================================\n" +
+                    " DISPLAY INCIDENTS MENU\n" +
+                    "========================================\n" +
+                    "\n" +
+                    incidentsToString(incidents) + "\n"
                 ;
-
-                std::string incidentsString = "";
-
-                for (const auto& incident : incidents) {
-                    incidentsString += incident.toString(
-                        ID_WIDTH,
-                        LOCATION_WIDTH,
-                        CATEGORY_WIDTH,
-                        SEVERITY_WIDTH,
-                        STATUS_WIDTH
-                    ) + '\n';
-                };
-
-                std::ostringstream displayIncidentsMenuOStringStream;
-
-                displayIncidentsMenuOStringStream
-                    << HEADER
-                    << "========================================" << std::endl
-                    << " DISPLAY INCIDENTS MENU" << std::endl
-                    << "========================================" << std::endl
-                    << std::endl
-                    << std::left
-                    << std::setw(ID_WIDTH) << "id"
-                    << std::setw(LOCATION_WIDTH) << "location"
-                    << std::setw(CATEGORY_WIDTH) << "category"
-                    << std::setw(SEVERITY_WIDTH) << "severity"
-                    << std::setw(STATUS_WIDTH) << "status" << std::endl
-                    << incidentsString << std::endl
-                ;
-                const std::string DISPLAY_INCIDENTS_MENU = displayIncidentsMenuOStringStream.str();
                 clearScreen();
                 std::cout << DISPLAY_INCIDENTS_MENU;
                 waitForEnter();
@@ -869,6 +939,36 @@ int main() {
             };
 
             case '3': {
+
+                Incidents prioritisedOpenIncidents = incidents;
+
+                prioritisedOpenIncidents.erase(
+                    std::remove_if(
+                        prioritisedOpenIncidents.begin(),
+                        prioritisedOpenIncidents.end(),
+                        [](const Incident& incident) -> bool {
+                            return incident.getState().status != Incident::Status::Open;
+                        }
+                    ),
+                    prioritisedOpenIncidents.end()
+                );
+
+                std::sort(
+                    prioritisedOpenIncidents.rbegin(),
+                    prioritisedOpenIncidents.rend()
+                );
+
+                const std::string PRIORITISE_OPEN_INCIDENTS_MENU =
+                    HEADER +
+                    "========================================\n" +
+                    " PRIORITISE OPEN INCIDENTS MENU\n" +
+                    "========================================\n" +
+                    "\n" +
+                    incidentsToString(prioritisedOpenIncidents) + "\n"
+                ;
+                clearScreen();
+                std::cout << PRIORITISE_OPEN_INCIDENTS_MENU;
+                waitForEnter();
                 break;
             };
 
@@ -920,6 +1020,59 @@ int main() {
             };
 
             case '6': {
+
+                std::string locationList = "";
+
+                for (unsigned int i = 0; i < LocationIndexCount; ++i) {
+                    LocationIndex locationIndex = static_cast<LocationIndex>(i);
+                    locationList += std::to_string(locationIndex) + " - " + locationIndexToName(locationIndex) + "\n";
+                };
+
+                const std::string FIND_ROUTE_MENU =
+                    "========================================\n"
+                    " FIND ROUTE MENU\n"
+                    "========================================\n"
+                    "\n" +
+                    locationList + "\n"
+                    "Enter from index: "
+                ;
+                clearScreen();
+                std::cout << FIND_ROUTE_MENU;
+
+                const std::string fromIndexString = getUserInput();
+
+                const bool isFromIndexStringValid = roadNetwork.isLocationIndexStringValid(fromIndexString);
+
+                if (!isFromIndexStringValid) {
+                    std::cout << "Error: from index is not one of the above displayed options" << std::endl;
+                    waitForEnter();
+                    break;
+                };
+
+                std::cout << "Enter to index: ";
+
+                const std::string toIndexString = getUserInput();
+
+                const bool isToIndexStringValid = roadNetwork.isLocationIndexStringValid(toIndexString);
+
+                if (!isToIndexStringValid) {
+                    std::cout << "Error: to index is not one of the above displayed options" << std::endl;
+                    waitForEnter();
+                    break;
+                };
+
+                const unsigned int fromIndex = std::stoul(fromIndexString);
+                const unsigned int toIndex = std::stoul(toIndexString);
+
+                const std::string shortestPathString = roadNetwork.shortestPathToString(fromIndex, toIndex);
+
+                std::cout
+                    << shortestPathString << std::endl
+                    << std::endl
+                ;
+
+                waitForEnter();
+
                 break;
             };
 

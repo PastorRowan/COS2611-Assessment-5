@@ -125,18 +125,16 @@ enum ServiceType {
     ServiceTypeCount
 };
 
+constexpr const char* serviceTypeStringMap[ServiceTypeCount] = {
+    "Water",
+    "Electricity",
+    "Road Works",
+    "Sanitation",
+    "Public Facilities"
+};
+
 std::string serviceTypeToString(ServiceType serviceType) {
-
-    constexpr const char* serviceTypeStringMap[ServiceTypeCount] = {
-        "Water",
-        "Electricity",
-        "Road Works",
-        "Sanitation",
-        "Public Facilities"
-    };
-
-    return serviceTypeStringMap[static_cast<int>(serviceType)];
-
+    return serviceTypeStringMap[static_cast<unsigned int>(serviceType)];
 };
 
 enum LocationIndex {
@@ -167,9 +165,7 @@ constexpr const char* locationIndexNameMap[LocationIndexCount] = {
 };
 
 const std::string locationIndexToName(LocationIndex locationIndex) {
-
-    return locationIndexNameMap[static_cast<int>(locationIndex)];
-
+    return locationIndexNameMap[static_cast<unsigned int>(locationIndex)];
 };
 
 constexpr const char* locationIndexShortNameMap[LocationIndexCount] = {
@@ -186,9 +182,77 @@ constexpr const char* locationIndexShortNameMap[LocationIndexCount] = {
 };
 
 const std::string locationIndexToShortName(LocationIndex locationIndex) {
+    return locationIndexShortNameMap[static_cast<unsigned int>(locationIndex)];
+};
 
-    return locationIndexShortNameMap[static_cast<int>(locationIndex)];
+struct Road {
+    unsigned int to;
+    unsigned int weight;
+};
 
+typedef std::vector<Road> Roads;
+
+const Roads locationIndexRoadsMap[LocationIndexCount] = {
+        {
+            { .to = NOORDHOEK, .weight = 12 },
+            { .to = GLENCAIRN, .weight = 7 },
+            { .to = KALK_BAY, .weight = 4 },
+            { .to = KOMMETJIE, .weight = 14 }
+        },
+        {
+            { .to = FISH_HOEK, .weight =  12 },
+            { .to = KOMMETJIE, .weight = 14 },
+            { .to = GLENCAIRN, .weight = 14 },
+            { .to = MUIZENBERG, .weight = 26 },
+            { .to = HOUT_BAY, .weight = 18 }
+        },
+        {
+            { .to = GLENCAIRN, .weight = 6 },
+            { .to = SCARBOROUGH, .weight = 18 },
+            { .to = SMIT_WINKEL_BAY, .weight = 14 }
+        },
+        {
+            { .to = FISH_HOEK, .weight = 7 },
+            { .to = NOORDHOEK, .weight = 14 },
+            { .to = SIMONS_TOWN, .weight = 6 },
+            { .to = KOMMETJIE, .weight = 18 },
+            { .to = SCARBOROUGH, .weight = 18 },
+            { .to = SMIT_WINKEL_BAY, .weight = 24 }
+        },
+        {
+            { .to = FISH_HOEK, .weight = 4 },
+            { .to = MUIZENBERG, .weight = 7 }
+        },
+        {
+            { .to = NOORDHOEK, .weight = 26 },
+            { .to = KALK_BAY, .weight = 7 },
+            { .to = HOUT_BAY, .weight = 31 }
+        },
+        {
+            { .to = FISH_HOEK, .weight = 14 },
+            { .to = NOORDHOEK, .weight = 14 },
+            { .to = GLENCAIRN, .weight = 18 },
+            { .to = SCARBOROUGH, .weight = 14 }
+        },
+        {
+            { .to = KOMMETJIE, .weight = 14 },
+            { .to = GLENCAIRN, .weight = 18 },
+            { .to = SIMONS_TOWN, .weight = 18 },
+            { .to = SMIT_WINKEL_BAY, .weight = 18 }
+        },
+        {
+            { .to = NOORDHOEK, .weight = 18 },
+            { .to = MUIZENBERG, .weight = 31 }
+        },
+        {
+            { .to = GLENCAIRN, .weight = 24 },
+            { .to = SIMONS_TOWN, .weight = 14 },
+            { .to = SCARBOROUGH, .weight = 18 }
+        }
+};
+
+Roads locationIndexToRoads(LocationIndex locationIndex) {
+    return locationIndexRoadsMap[static_cast<unsigned int>(locationIndex)];
 };
 
 class ResponseTeam {
@@ -227,6 +291,10 @@ class ResponseTeam {
 
         ResponseTeam(State stateP): state(stateP) {};
 
+        const State& getState() const {
+            return state;
+        };
+
         std::string toString(
             const unsigned int idWidth = 5,
             const unsigned int locationWidth = 20,
@@ -249,6 +317,42 @@ class ResponseTeam {
 
 };
 
+typedef std::vector<ResponseTeam> ResponseTeams;
+
+std::string responseTeamsToString(const ResponseTeams& responseTeams) {
+
+    const unsigned int
+        ID_WIDTH = 5,
+        LOCATION_WIDTH = 20,
+        CAPABILITY_WIDTH = 20,
+        STATUS_WIDTH = 10
+    ;
+
+    std::string reponseTeamsString = "";
+
+    for (const auto& responseTeam : responseTeams) {
+        reponseTeamsString += responseTeam.toString(
+            ID_WIDTH,
+            LOCATION_WIDTH,
+            CAPABILITY_WIDTH,
+            STATUS_WIDTH
+        ) + '\n';
+    };
+
+    std::ostringstream output;
+
+    output
+        << std::left
+        << std::setw(ID_WIDTH) << "id"
+        << std::setw(LOCATION_WIDTH) << "location"
+        << std::setw(CAPABILITY_WIDTH) << "capability"
+        << std::setw(STATUS_WIDTH) << "status" << std::endl
+        << reponseTeamsString << std::endl
+    ;
+
+    return output.str();
+
+};
 
 class Incident {
 
@@ -337,18 +441,51 @@ class Incident {
 
 };
 
-struct Road {
-    const unsigned int to;
-    const unsigned int weight;
+typedef std::vector<Incident> Incidents;
+
+std::string incidentsToString(const Incidents& incidents) {
+
+    const unsigned int
+        ID_WIDTH = 5,
+        LOCATION_WIDTH = 20,
+        CATEGORY_WIDTH = 20,
+        SEVERITY_WIDTH = 10,
+        STATUS_WIDTH = 10
+    ;
+
+    std::string incidentsString = "";
+
+    for (const auto& incident : incidents) {
+        incidentsString += incident.toString(
+            ID_WIDTH,
+            LOCATION_WIDTH,
+            CATEGORY_WIDTH,
+            SEVERITY_WIDTH,
+            STATUS_WIDTH
+        ) + '\n';
+    };
+
+    std::ostringstream output;
+
+    output
+        << std::left
+        << std::setw(ID_WIDTH) << "id"
+        << std::setw(LOCATION_WIDTH) << "location"
+        << std::setw(CATEGORY_WIDTH) << "category"
+        << std::setw(SEVERITY_WIDTH) << "severity"
+        << std::setw(STATUS_WIDTH) << "status" << std::endl
+        << incidentsString << std::endl
+    ;
+
+    return output.str();
+
 };
 
-typedef std::vector<Road> Roads;
-
 struct Location {
-    const long long id;
-    const std::string name;
-    const std::string  shortName;
-    const Roads roads;
+    long long id;
+    std::string name;
+    std::string  shortName;
+    Roads roads = {};
 };
 
 typedef std::vector<Location> Locations;
@@ -361,7 +498,7 @@ class RoadNetwork {
 
     public:
 
-        RoadNetwork(Locations locationsP): locations(locationsP) {};
+        RoadNetwork(Locations locationsP = {}): locations(locationsP) {};
 
         const Locations& getLocations() const {
             return locations;
@@ -369,6 +506,59 @@ class RoadNetwork {
 
         void addLocation(const Location location) {
             locations.push_back(location);
+        };
+
+        void addRoads(
+            const unsigned int from,
+            const Roads roads,
+            const bool areDirected = false
+        ) {
+            for (auto road : roads) {
+                addRoad(from, road, areDirected);
+            };
+        };
+
+        void addRoad(
+            const unsigned int from,
+            const Road road,
+            const bool isDirected = false
+        ) {
+
+            const unsigned int to = road.to;
+
+            Location& fromLocation = locations.at(from);
+            Roads& fromRoads = fromLocation.roads;
+            bool fromRoadAlreadyExists = false;
+            for (auto& currentFromRoad : fromRoads) {
+                if (currentFromRoad.to == to) {
+                    currentFromRoad.weight = road.weight;
+                    fromRoadAlreadyExists = true;
+                    break;
+                };
+            };
+
+            if (!fromRoadAlreadyExists) {
+                fromRoads.push_back(road);
+            };
+
+            if (isDirected) {
+                return;
+            };
+
+            Location& toLocation = locations.at(to);
+            Roads& toRoads = toLocation.roads;
+            bool toRoadAlreadyExists = false;
+            for (auto& currentToRoad : toRoads) {
+                if (currentToRoad.to == from) {
+                    currentToRoad.weight = road.weight;
+                    return;
+                };
+            };
+
+            if (!toRoadAlreadyExists) {
+                toRoads.push_back(road);
+            };
+
         };
 
         bool isValid() const {
@@ -671,46 +861,6 @@ std::string RoadNetwork::shortestPathToString(
 
 };
 
-typedef std::vector<Incident> Incidents;
-
-std::string incidentsToString(const Incidents& incidents) {
-
-    const unsigned int
-        ID_WIDTH = 5,
-        LOCATION_WIDTH = 20,
-        CATEGORY_WIDTH = 20,
-        SEVERITY_WIDTH = 10,
-        STATUS_WIDTH = 10
-    ;
-
-    std::string incidentsString = "";
-
-    for (const auto& incident : incidents) {
-        incidentsString += incident.toString(
-            ID_WIDTH,
-            LOCATION_WIDTH,
-            CATEGORY_WIDTH,
-            SEVERITY_WIDTH,
-            STATUS_WIDTH
-        ) + '\n';
-    };
-
-    std::ostringstream output;
-
-    output
-        << std::left
-        << std::setw(ID_WIDTH) << "id"
-        << std::setw(LOCATION_WIDTH) << "location"
-        << std::setw(CATEGORY_WIDTH) << "category"
-        << std::setw(SEVERITY_WIDTH) << "severity"
-        << std::setw(STATUS_WIDTH) << "status" << std::endl
-        << incidentsString << std::endl
-    ;
-
-    return output.str();
-
-};
-
 int main() {
     /*
     enum LocationIndex {
@@ -728,117 +878,25 @@ int main() {
     };
     */
 
-    RoadNetwork roadNetwork({
-        {
-            .id = FISH_HOEK,
-            .name = locationIndexToName(FISH_HOEK),
-            .shortName = locationIndexToShortName(FISH_HOEK),
-            .roads = {
-                { .to = NOORDHOEK, .weight = 12 },
-                { .to = GLENCAIRN, .weight = 7 },
-                { .to = KALK_BAY, .weight = 4 },
-                { .to = KOMMETJIE, .weight = 14 }
-            }
-        },
-        {
-            .id = NOORDHOEK,
-            .name = locationIndexToName(NOORDHOEK),
-            .shortName = locationIndexToShortName(NOORDHOEK),
-            .roads = {
-                { .to = FISH_HOEK, .weight =  12 },
-                { .to = KOMMETJIE, .weight = 14 },
-                { .to = GLENCAIRN, .weight = 14 },
-                { .to = MUIZENBERG, .weight = 26 },
-                { .to = HOUT_BAY, .weight = 18 }
-            }
-        },
-        {
-            .id = SIMONS_TOWN,
-            .name = locationIndexToName(SIMONS_TOWN),
-            .shortName = locationIndexToShortName(SIMONS_TOWN),
-            .roads = {
-                { .to = GLENCAIRN, .weight = 6 },
-                { .to = SCARBOROUGH, .weight = 18 },
-                { .to = SMIT_WINKEL_BAY, .weight = 14 }
-            }
-        },
-        {
-            .id = GLENCAIRN,
-            .name = locationIndexToName(GLENCAIRN),
-            .shortName = locationIndexToShortName(GLENCAIRN),
-            .roads = {
-                { .to = FISH_HOEK, .weight = 7 },
-                { .to = NOORDHOEK, .weight = 14 },
-                { .to = SIMONS_TOWN, .weight = 6 },
-                { .to = KOMMETJIE, .weight = 18 },
-                { .to = SCARBOROUGH, .weight = 18 },
-                { .to = SMIT_WINKEL_BAY, .weight = 24 }
-            }
-        },
-        {
-            .id = KALK_BAY,
-            .name = locationIndexToName(KALK_BAY),
-            .shortName = locationIndexToShortName(KALK_BAY),
-            .roads = {
-                { .to = FISH_HOEK, .weight = 4 },
-                { .to = MUIZENBERG, .weight = 7 }
-            }
-        },
-        {
-            .id = MUIZENBERG,
-            .name = locationIndexToName(MUIZENBERG),
-            .shortName = locationIndexToShortName(MUIZENBERG),
-            .roads = {
-                { .to = NOORDHOEK, .weight = 26 },
-                { .to = KALK_BAY, .weight = 7 },
-                { .to = HOUT_BAY, .weight = 31 }
-            }
-        },
-        {
-            .id = KOMMETJIE,
-            .name = locationIndexToName(KOMMETJIE),
-            .shortName = locationIndexToShortName(KOMMETJIE),
-            .roads = {
-                { .to = FISH_HOEK, .weight = 14 },
-                { .to = NOORDHOEK, .weight = 14 },
-                { .to = GLENCAIRN, .weight = 18 },
-                { .to = SCARBOROUGH, .weight = 14 }
-            }
-        },
-        {
-            .id = SCARBOROUGH,
-            .name = locationIndexToName(SCARBOROUGH),
-            .shortName = locationIndexToShortName(SCARBOROUGH),
-            .roads = {
-                { .to = KOMMETJIE, .weight = 14 },
-                { .to = GLENCAIRN, .weight = 18 },
-                { .to = SIMONS_TOWN, .weight = 18 },
-                { .to = SMIT_WINKEL_BAY, .weight = 18 }
-            }
-        },
-        {
-            .id = HOUT_BAY,
-            .name = locationIndexToName(HOUT_BAY),
-            .shortName = locationIndexToShortName(HOUT_BAY),
-            .roads = {
-                { .to = NOORDHOEK, .weight = 18 },
-                { .to = MUIZENBERG, .weight = 31 }
-            }
-        },
-        {
-            .id = SMIT_WINKEL_BAY,
-            .name = locationIndexToName(SMIT_WINKEL_BAY),
-            .shortName = locationIndexToShortName(SMIT_WINKEL_BAY),
-            .roads = {
-                { .to = GLENCAIRN, .weight = 24 },
-                { .to = SIMONS_TOWN, .weight = 14 },
-                { .to = SCARBOROUGH, .weight = 18 }
-            }
-        }
-    });
+    RoadNetwork roadNetwork;
+
+    for (unsigned int i = 0; i < LocationIndexCount; ++i) {
+        const LocationIndex currentLocationIndex = static_cast<LocationIndex>(i);
+        roadNetwork.addLocation({
+            .id = currentLocationIndex,
+            .name = locationIndexToName(currentLocationIndex),
+            .shortName = locationIndexToShortName(currentLocationIndex)
+        });
+    };
+
+    for (unsigned int i = 0; i < LocationIndexCount; ++i) {
+        const LocationIndex currentLocationIndex = static_cast<LocationIndex>(i);
+        const Roads currentRoads = locationIndexToRoads(currentLocationIndex);
+        roadNetwork.addRoads(currentLocationIndex, currentRoads);
+    };
 
     IdGenerator reponseTeamIdGenerator;
-    std::vector<ResponseTeam> responseTeams = {};
+    ResponseTeams responseTeams = {};
     responseTeams.reserve(NUMBER_OF_REPONSE_TEAMS);
 
     for (unsigned int i = 0; i < NUMBER_OF_REPONSE_TEAMS; ++i) {
@@ -960,9 +1018,9 @@ int main() {
 
                 const std::string PRIORITISE_OPEN_INCIDENTS_MENU =
                     HEADER +
-                    "========================================\n" +
-                    " PRIORITISE OPEN INCIDENTS MENU\n" +
-                    "========================================\n" +
+                    "========================================\n"
+                    " PRIORITISE OPEN INCIDENTS MENU\n"
+                    "========================================\n"
                     "\n" +
                     incidentsToString(prioritisedOpenIncidents) + "\n"
                 ;
@@ -974,41 +1032,15 @@ int main() {
 
             case '4': {
 
-                const unsigned int
-                    ID_WIDTH = 5,
-                    LOCATION_WIDTH = 20,
-                    CAPABILITY_WIDTH = 20,
-                    STATUS_WIDTH = 10
+                const std::string DISPLAY_RESPONSE_TEAMS_MENU =
+                    HEADER +
+                    "========================================\n"
+                    " DISPLAY RESPONSE TEAMS MENU"
+                    "========================================\n"
+                    "\n" +
+                    responseTeamsToString(responseTeams)
                 ;
 
-                std::string reponseTeamsString = "";
-
-                for (const auto& responseTeam : responseTeams) {
-                    reponseTeamsString += responseTeam.toString(
-                        ID_WIDTH,
-                        LOCATION_WIDTH,
-                        CAPABILITY_WIDTH,
-                        STATUS_WIDTH
-                    ) + '\n';
-                };
-
-                std::ostringstream displayResponseTeamsMenuOStringStream;
-
-                displayResponseTeamsMenuOStringStream
-                    << HEADER
-                    << "========================================" << std::endl
-                    << " DISPLAY RESPONSE TEAMS MENU" << std::endl
-                    << "========================================" << std::endl
-                    << std::endl
-                    << std::left
-                    << std::setw(ID_WIDTH) << "id"
-                    << std::setw(LOCATION_WIDTH) << "location"
-                    << std::setw(CAPABILITY_WIDTH) << "capability"
-                    << std::setw(STATUS_WIDTH) << "status" << std::endl
-                    << reponseTeamsString << std::endl
-                ;
-
-                const std::string DISPLAY_RESPONSE_TEAMS_MENU = displayResponseTeamsMenuOStringStream.str();
                 clearScreen();
                 std::cout << DISPLAY_RESPONSE_TEAMS_MENU;
                 waitForEnter();
@@ -1016,7 +1048,79 @@ int main() {
             };
 
             case '5': {
+
+                const std::string INVESTIGATE_INCIDENT_MENU =
+                    HEADER +
+                    "========================================\n"
+                    " INVESTIGATE INCIDENT MENU\n"
+                    "========================================\n"
+                    "\n"
+                    "Enter incident id: "
+                ;
+                clearScreen();
+                std::cout << INVESTIGATE_INCIDENT_MENU;
+
+                const std::string inputIncidentIdString = getUserInput();
+
+                long long inputIdLongLong = -1;
+
+                try {
+                    inputIdLongLong = std::stoll(inputIncidentIdString);
+                } catch (const std::exception&) {
+                    std::cout
+                        << std::endl
+                        << "Error: Incident id must be from 1 to " << NUMBER_OF_INCIDENTS << std::endl
+                        << std::endl
+                    ;
+                    waitForEnter();
+                    break;
+                };
+
+                const auto cit = std::find_if(
+                    incidents.cbegin(),
+                    incidents.cend(),
+                    [ inputIdLongLong ](const auto& incident) -> bool {
+                        return incident.getState().id == inputIdLongLong;
+                    }
+                );
+
+                if (cit == incidents.cend()) {
+                    std::cout
+                        << std::endl
+                        << "Incident with id '" << inputIncidentIdString << "' does not exist" << std::endl
+                        << std::endl
+                    ;
+                    waitForEnter();
+                    break;
+                };
+
+                const Incident& incident = *cit;
+
+                ResponseTeams suitableAvailableResponseTeams = {};
+
+                std::copy_if(
+                    responseTeams.cbegin(),
+                    responseTeams.cend(),
+                    std::back_inserter(suitableAvailableResponseTeams),
+                    [ incident ](const auto& responseTeam) -> bool {
+                        return (
+                            incident.getState().category == responseTeam.getState().capability
+                        ) && (
+                            responseTeam.getState().status == ResponseTeam::Status::Available
+                        );
+                    }
+                );
+
+                std::cout
+                    << std::endl
+                    << incidentsToString({ incident })
+                    << "Suitable available teams:" << std::endl
+                    << responseTeamsToString(suitableAvailableResponseTeams)
+                ;
+                waitForEnter();
+
                 break;
+
             };
 
             case '6': {

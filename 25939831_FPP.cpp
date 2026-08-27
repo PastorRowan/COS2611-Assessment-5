@@ -372,28 +372,37 @@ class Incident {
         };
 
         static std::string severityToString(Severity severity) {
-            return severityStringMap[static_cast<int>(severity)];
+            return severityStringMap[static_cast<unsigned int>(severity)];
         };
 
         enum Status {
             Open,
+            Assigned,
+            Resolved,
             StatusCount
         };
 
         static constexpr const char* statusStringMap[StatusCount] = {
-            "Open"
+            "Open",
+            "Assigned",
+            "Resolved"
         };
 
         static std::string statusToString(Status status) {
-            return statusStringMap[static_cast<int>(status)];
+            return statusStringMap[static_cast<unsigned int>(status)];
         };
 
+        static const long long UNASSIGNED_ID = -1;
+
+        static const long long UNASSIGNED_TEAM_ID = -1;
+
         struct State {
-            long long id;
+            long long id = UNASSIGNED_ID;
             LocationIndex locationIndex;
             ServiceType category;
             Severity severity;
             Status status = Status::Open;
+            long long assignedTeamId = UNASSIGNED_TEAM_ID;
         };
 
     private:
@@ -429,6 +438,18 @@ class Incident {
 
         const State& getState() const {
             return state;
+        };
+
+        bool isAssignedId() const {
+            return state.id != UNASSIGNED_ID;
+        };
+
+        bool isAssignedTeam() const {
+            return state.assignedTeamId != UNASSIGNED_TEAM_ID;
+        };
+
+        bool isStatus(const Status status) const {
+            return state.status == status;
         };
 
         friend bool operator<(const Incident& left, const Incident& right) {
@@ -1024,6 +1045,7 @@ int main() {
                     "\n" +
                     incidentsToString(prioritisedOpenIncidents) + "\n"
                 ;
+
                 clearScreen();
                 std::cout << PRIORITISE_OPEN_INCIDENTS_MENU;
                 waitForEnter();
@@ -1057,6 +1079,7 @@ int main() {
                     "\n"
                     "Enter incident id: "
                 ;
+
                 clearScreen();
                 std::cout << INVESTIGATE_INCIDENT_MENU;
 
@@ -1113,6 +1136,7 @@ int main() {
 
                 std::cout
                     << std::endl
+                    << "Incident info:" << std::endl
                     << incidentsToString({ incident })
                     << "Suitable available teams:" << std::endl
                     << responseTeamsToString(suitableAvailableResponseTeams)
@@ -1181,6 +1205,139 @@ int main() {
             };
 
             case '7': {
+
+                const std::string UPDATE_INCIDENT_MENU =
+                    HEADER +
+                    "========================================\n"
+                    " UPDATE INCIDENT MENU\n"
+                    "========================================\n"
+                    "\n"
+                    "Enter incident id: "
+                ;
+
+                clearScreen();
+                std::cout << UPDATE_INCIDENT_MENU;
+
+                const std::string inputIncidentIdString = getUserInput();
+
+                long long inputIdLongLong = -1;
+
+                try {
+                    inputIdLongLong = std::stoll(inputIncidentIdString);
+                } catch (const std::exception&) {
+                    std::cout
+                        << std::endl
+                        << "Error: Incident id must be from 1 to " << NUMBER_OF_INCIDENTS << std::endl
+                        << std::endl
+                    ;
+                    waitForEnter();
+                    break;
+                };
+
+                const auto cit = std::find_if(
+                    incidents.cbegin(),
+                    incidents.cend(),
+                    [ inputIdLongLong ](const auto& incident) -> bool {
+                        return incident.getState().id == inputIdLongLong;
+                    }
+                );
+
+                if (cit == incidents.cend()) {
+                    std::cout
+                        << std::endl
+                        << "Incident with id '" << inputIncidentIdString << "' does not exist" << std::endl
+                        << std::endl
+                    ;
+                    waitForEnter();
+                    break;
+                };
+
+                const Incident& incident = *cit;
+
+                std::string optionsText = "";
+
+                enum UpdateAction {
+                    AssignTeam,
+                    UnassignTeam,
+                    ResolveIncident,
+                    ReopenIncident,
+                    Cancel,
+                    UpdateActionCount
+                };
+
+                UpdateAction action = UpdateActionCount;
+
+                switch (incident.getState().status) {
+
+                    case Incident::Status::Open: {
+                        if (incident.isAssignedTeam()) {
+                            optionsText = "1. Assign team\n";
+                            action = AssignTeam;
+                        } else {
+                            optionsText = "1. Unassign team\n";
+                            action = UnassignTeam;
+                        };
+                        break;
+                    };
+
+                    case Incident::Status::Assigned: {
+                        optionsText = "1. Resolve incident\n";
+                        action = ResolveIncident;
+                        break;
+                    };
+
+                    case Incident::Status::Resolved: {
+                        optionsText = "1. Reopen incident\n";
+                        action = ReopenIncident;
+                        break;
+                    };
+
+                    default: {
+                        std::cout
+                            << std::endl
+                            << "Error: Incident to be updated has invalid status:" << std::endl
+                            << incidentsToString({ incident })
+                        ;
+                        waitForEnter();
+                        exit = true;
+                    };
+
+                };
+
+                std::cout
+                    << std::endl
+                    << "Incident info:" << std::endl
+                    << incidentsToString({ incident }) << std::endl
+                    << "Options:" << std::endl
+                    << optionsText << std::endl
+                ;
+
+                waitForEnter();
+
+                switch (action) {
+
+                    case UpdateAction::AssignTeam: {
+                        break;
+                    };
+
+                    case UpdateAction::UnassignTeam: {
+                        break;
+                    };
+
+                    case UpdateAction::ResolveIncident: {
+                        break;
+                    };
+
+                    case UpdateAction::ReopenIncident {
+
+                    };
+
+                    case UpdateAction::Cancel {
+
+                    };
+
+                };
+
                 break;
             };
 

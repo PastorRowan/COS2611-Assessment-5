@@ -77,6 +77,26 @@ std::string getUserInput(
 
 };
 
+long long stringToLongLong(
+    const std::string& str,
+    bool* ok = nullptr
+) {
+
+    if (ok != nullptr) {
+        *ok = true;
+    };
+
+    try {
+        return std::stoll(str);
+    } catch (const std::exception&) {
+        if (ok != nullptr) {
+            *ok = false;
+        };
+        return -1;
+    };
+
+};
+
 void waitForEnter() {
 
     // Prompt
@@ -295,6 +315,10 @@ class ResponseTeam {
             return state;
         };
 
+        void setId(const long long newId) {
+            state.id = newId;
+        };
+
         std::string toString(
             const unsigned int idWidth = 5,
             const unsigned int locationWidth = 20,
@@ -319,8 +343,9 @@ class ResponseTeam {
 
 typedef std::vector<ResponseTeam> ResponseTeams;
 
-std::string responseTeamsToString(const ResponseTeams& responseTeams) {
-
+std::string responseTeamsToString(
+    const ResponseTeams& responseTeams
+) {
     const unsigned int
         ID_WIDTH = 5,
         LOCATION_WIDTH = 20,
@@ -351,6 +376,82 @@ std::string responseTeamsToString(const ResponseTeams& responseTeams) {
     ;
 
     return output.str();
+
+};
+
+class ResponseTeamManager {
+
+    private:
+
+        ResponseTeams responseTeams;
+        IdGenerator idGenerator;
+
+    public:
+
+        ResponseTeamManager(
+            ResponseTeams responseTeamsP = {}
+        ):
+            responseTeams(responseTeamsP),
+            idGenerator() {
+        };
+
+        const ResponseTeams& getResponseTeams() {
+            return responseTeams;
+        };
+
+        std::string toString() {
+            return responseTeamsToString(responseTeams);
+        };
+
+        const ResponseTeam* getResponseTeamById(
+            const long long teamId
+        ) const {
+
+            const auto cit = std::find_if(
+                responseTeams.cbegin(),
+                responseTeams.cend(),
+                [ teamId ](const auto& responseTeam) -> bool {
+                    return responseTeam.getState().id == teamId;
+                }
+            );
+
+            if (cit == responseTeams.cend()) {
+                return nullptr;
+            };
+
+            return &(*cit);
+
+        };
+
+        void addResponseTeam(
+            ResponseTeam responseTeam
+        ) {
+            responseTeam.setId(idGenerator.getNextId());
+            responseTeams.push_back(responseTeam);
+        };
+
+        std::string suitableAndAvailableTeamsToString(
+            const ServiceType serviceType
+        ) {
+
+            ResponseTeams suitableAndAvailableResponseTeams = {};
+
+                std::copy_if(
+                    responseTeams.cbegin(),
+                    responseTeams.cend(),
+                    std::back_inserter(suitableAndAvailableResponseTeams),
+                    [ serviceType ](const auto& responseTeam) -> bool {
+                        return (
+                            serviceType == responseTeam.getState().capability
+                        ) && (
+                            responseTeam.getState().status == ResponseTeam::Status::Available
+                        );
+                    }
+                );
+
+            return responseTeamsToString(suitableAndAvailableResponseTeams);
+
+        };
 
 };
 
@@ -413,6 +514,46 @@ class Incident {
 
         Incident(State stateP): state(stateP) {};
 
+        const State& getState() const {
+            return state;
+        };
+
+        void setId(const long long newId) {
+            state.id = newId;
+        };
+
+        void setLocationIndex(const LocationIndex newLocationIndex) {
+            state.locationIndex = newLocationIndex;
+        };
+
+        void setCategory(const ServiceType newCategory) {
+            state.category = newCategory;
+        };
+
+        void setSeverity(const Severity newSeverity) {
+            state.severity = newSeverity;
+        };
+
+        void setStatus(const Status newStatus) {
+            state.status = newStatus;
+        };
+
+        void setAssignedTeamId(const long long newAssignedTeamId) {
+            state.assignedTeamId =  newAssignedTeamId;
+        };
+
+        bool isAssignedId() const {
+            return state.id != UNASSIGNED_ID;
+        };
+
+        bool isAssignedTeam() const {
+            return state.assignedTeamId != UNASSIGNED_TEAM_ID;
+        };
+
+        bool isStatus(const Status status) const {
+            return state.status == status;
+        };
+
         std::string toString(
             const unsigned int idWidth = 5,
             const unsigned int locationWidth = 20,
@@ -436,22 +577,6 @@ class Incident {
 
         };
 
-        const State& getState() const {
-            return state;
-        };
-
-        bool isAssignedId() const {
-            return state.id != UNASSIGNED_ID;
-        };
-
-        bool isAssignedTeam() const {
-            return state.assignedTeamId != UNASSIGNED_TEAM_ID;
-        };
-
-        bool isStatus(const Status status) const {
-            return state.status == status;
-        };
-
         friend bool operator<(const Incident& left, const Incident& right) {
             if (left.state.severity != right.state.severity) {
                 return left.state.severity < right.state.severity;
@@ -464,7 +589,9 @@ class Incident {
 
 typedef std::vector<Incident> Incidents;
 
-std::string incidentsToString(const Incidents& incidents) {
+std::string incidentsToString(
+    const Incidents& incidents
+) {
 
     const unsigned int
         ID_WIDTH = 5,
@@ -499,6 +626,116 @@ std::string incidentsToString(const Incidents& incidents) {
     ;
 
     return output.str();
+
+};
+
+class IncidentsManager {
+
+    private:
+
+        Incidents incidents;
+        IdGenerator idGenerator;
+
+    public:
+
+        IncidentsManager(
+            Incidents incidentsP = {}
+        ):
+            incidents(incidentsP),
+            idGenerator() {
+        };
+
+        const Incidents& getIncidents() {
+            return incidents;
+        };
+
+        const Incident* getIncidentById(
+            const long long incidentId
+        ) {
+
+            const auto cit = std::find_if(
+                incidents.cbegin(),
+                incidents.cend(),
+                [ incidentId ](const auto& incident) -> bool {
+                    return incident.getState().id == incidentId;
+                }
+            );
+
+            if (cit == incidents.cend()) {
+                return nullptr;
+            };
+
+            return &(*cit);
+
+        };
+
+        void addIncident(
+            Incident incident
+        ) {
+            incident.setId(idGenerator.getNextId());
+            incidents.push_back(incident);
+        };
+
+        std::string toString() {
+            return incidentsToString(incidents);
+        };
+
+        std::string prioritisedIncidentsToString() {
+
+            Incidents prioritisedOpenIncidents = {};
+
+            std::copy_if(
+                incidents.cbegin(),
+                incidents.cend(),
+                std::back_inserter(prioritisedOpenIncidents),
+                [](const Incident& incident) -> bool {
+                    return incident.getState().status == Incident::Status::Open;
+                }
+            ),
+
+            std::sort(
+                prioritisedOpenIncidents.rbegin(),
+                prioritisedOpenIncidents.rend()
+            );
+
+            return incidentsToString(prioritisedOpenIncidents);
+
+        };
+
+        void setIncidentStatus(
+            const long long incidentId,
+            const Incident::Status status
+        ) {
+            for (auto& incident : incidents) {
+                if (incident.getState().id == incidentId) {
+                    incident.setStatus(status);
+                    return;
+                };
+            };
+        };
+
+        void assignTeamToIncident(
+            const long long incidentId,
+            const long long assignedTeamId
+        ) {
+            for (auto& incident : incidents) {
+                if (incident.getState().id == incidentId) {
+                    incident.setAssignedTeamId(assignedTeamId);
+                    return;
+                };
+            };
+        };
+
+        void unassignTeamFromIncident(
+            const long long incidentId
+        ) {
+            for (auto& incident : incidents) {
+                if (incident.getState().id == incidentId) {
+                    incident.setAssignedTeamId(Incident::UNASSIGNED_TEAM_ID);
+                    return;
+                };
+            };
+        };
 
 };
 
@@ -916,33 +1153,27 @@ int main() {
         roadNetwork.addRoads(currentLocationIndex, currentRoads);
     };
 
-    IdGenerator reponseTeamIdGenerator;
-    ResponseTeams responseTeams = {};
-    responseTeams.reserve(NUMBER_OF_REPONSE_TEAMS);
+    ResponseTeamManager responseTeamManager;
 
     for (unsigned int i = 0; i < NUMBER_OF_REPONSE_TEAMS; ++i) {
         ResponseTeam randomResponseTeam({
-            .id = reponseTeamIdGenerator.getNextId(),
             .locationIndex = ran<LocationIndex>(0, LocationIndexCount - 1),
             .capability = ran<ServiceType>(0, ServiceTypeCount - 1),
             .status = ran<ResponseTeam::Status>(0, ResponseTeam::StatusCount - 1)
         });
-        responseTeams.push_back(randomResponseTeam);
+        responseTeamManager.addResponseTeam(randomResponseTeam);
     };
 
-    IdGenerator incidentIdGenerator;
-    Incidents incidents = {};
-    incidents.reserve(NUMBER_OF_INCIDENTS);
+    IncidentsManager incidentsManager;
 
     for (unsigned int i = 0; i < NUMBER_OF_INCIDENTS; ++i) {
-        Incident randomIndicent({
-            .id = incidentIdGenerator.getNextId(),
+        Incident randomIncident({
             .locationIndex = ran<LocationIndex>(0, LocationIndexCount - 1),
             .category = ran<ServiceType>(0, ServiceTypeCount - 1),
             .severity = ran<Incident::Severity>(0, Incident::SeverityCount - 1),
-            .status = ran<Incident::Status>(0, Incident::StatusCount - 1)
+            .status = Incident::Status::Open
         });
-        incidents.push_back(randomIndicent);
+        incidentsManager.addIncident(randomIncident);
     };
 
     bool exit = false;
@@ -1009,7 +1240,7 @@ int main() {
                     " DISPLAY INCIDENTS MENU\n" +
                     "========================================\n" +
                     "\n" +
-                    incidentsToString(incidents) + "\n"
+                    incidentsManager.toString() + "\n"
                 ;
                 clearScreen();
                 std::cout << DISPLAY_INCIDENTS_MENU;
@@ -1019,31 +1250,13 @@ int main() {
 
             case '3': {
 
-                Incidents prioritisedOpenIncidents = incidents;
-
-                prioritisedOpenIncidents.erase(
-                    std::remove_if(
-                        prioritisedOpenIncidents.begin(),
-                        prioritisedOpenIncidents.end(),
-                        [](const Incident& incident) -> bool {
-                            return incident.getState().status != Incident::Status::Open;
-                        }
-                    ),
-                    prioritisedOpenIncidents.end()
-                );
-
-                std::sort(
-                    prioritisedOpenIncidents.rbegin(),
-                    prioritisedOpenIncidents.rend()
-                );
-
                 const std::string PRIORITISE_OPEN_INCIDENTS_MENU =
                     HEADER +
                     "========================================\n"
                     " PRIORITISE OPEN INCIDENTS MENU\n"
                     "========================================\n"
                     "\n" +
-                    incidentsToString(prioritisedOpenIncidents) + "\n"
+                    incidentsManager.prioritisedIncidentsToString() + "\n"
                 ;
 
                 clearScreen();
@@ -1060,7 +1273,7 @@ int main() {
                     " DISPLAY RESPONSE TEAMS MENU"
                     "========================================\n"
                     "\n" +
-                    responseTeamsToString(responseTeams)
+                    responseTeamManager.toString()
                 ;
 
                 clearScreen();
@@ -1083,63 +1296,41 @@ int main() {
                 clearScreen();
                 std::cout << INVESTIGATE_INCIDENT_MENU;
 
-                const std::string inputIncidentIdString = getUserInput();
+                const std::string INPUT_INCIDENT_ID_STRING = getUserInput();
 
-                long long inputIdLongLong = -1;
+                bool ok = false;
 
-                try {
-                    inputIdLongLong = std::stoll(inputIncidentIdString);
-                } catch (const std::exception&) {
+                long long inputIdLongLong = stringToLongLong(INPUT_INCIDENT_ID_STRING, &ok);
+
+                if (!ok) {
                     std::cout
                         << std::endl
                         << "Error: Incident id must be from 1 to " << NUMBER_OF_INCIDENTS << std::endl
                         << std::endl
                     ;
                     waitForEnter();
-                    break;
                 };
 
-                const auto cit = std::find_if(
-                    incidents.cbegin(),
-                    incidents.cend(),
-                    [ inputIdLongLong ](const auto& incident) -> bool {
-                        return incident.getState().id == inputIdLongLong;
-                    }
-                );
+                const Incident* incident = incidentsManager.getIncidentById(inputIdLongLong);
 
-                if (cit == incidents.cend()) {
+                if (incident == nullptr) {
                     std::cout
                         << std::endl
-                        << "Incident with id '" << inputIncidentIdString << "' does not exist" << std::endl
+                        << "Incident with id '" << INPUT_INCIDENT_ID_STRING << "' does not exist" << std::endl
                         << std::endl
                     ;
                     waitForEnter();
                     break;
                 };
 
-                const Incident& incident = *cit;
-
-                ResponseTeams suitableAvailableResponseTeams = {};
-
-                std::copy_if(
-                    responseTeams.cbegin(),
-                    responseTeams.cend(),
-                    std::back_inserter(suitableAvailableResponseTeams),
-                    [ incident ](const auto& responseTeam) -> bool {
-                        return (
-                            incident.getState().category == responseTeam.getState().capability
-                        ) && (
-                            responseTeam.getState().status == ResponseTeam::Status::Available
-                        );
-                    }
-                );
+                const ServiceType serviceType = incident->getState().category;
 
                 std::cout
                     << std::endl
                     << "Incident info:" << std::endl
-                    << incidentsToString({ incident })
+                    << incidentsToString({ *incident })
                     << "Suitable available teams:" << std::endl
-                    << responseTeamsToString(suitableAvailableResponseTeams)
+                    << responseTeamManager.suitableAndAvailableTeamsToString(serviceType)
                 ;
                 waitForEnter();
 
@@ -1218,13 +1409,13 @@ int main() {
                 clearScreen();
                 std::cout << UPDATE_INCIDENT_MENU;
 
-                const std::string inputIncidentIdString = getUserInput();
+                const std::string INPUT_INCIDENT_ID_STRING = getUserInput();
 
-                long long inputIdLongLong = -1;
+                bool ok = false;
 
-                try {
-                    inputIdLongLong = std::stoll(inputIncidentIdString);
-                } catch (const std::exception&) {
+                long long inputIdLongLong = stringToLongLong(INPUT_INCIDENT_ID_STRING, &ok);
+
+                if (!ok) {
                     std::cout
                         << std::endl
                         << "Error: Incident id must be from 1 to " << NUMBER_OF_INCIDENTS << std::endl
@@ -1234,61 +1425,45 @@ int main() {
                     break;
                 };
 
-                const auto cit = std::find_if(
-                    incidents.cbegin(),
-                    incidents.cend(),
-                    [ inputIdLongLong ](const auto& incident) -> bool {
-                        return incident.getState().id == inputIdLongLong;
-                    }
-                );
+                const Incident* incidentPointer = incidentsManager.getIncidentById(inputIdLongLong);
 
-                if (cit == incidents.cend()) {
+                if (incidentPointer == nullptr) {
                     std::cout
                         << std::endl
-                        << "Incident with id '" << inputIncidentIdString << "' does not exist" << std::endl
+                        << "Incident with id '" << INPUT_INCIDENT_ID_STRING << "' does not exist" << std::endl
                         << std::endl
                     ;
                     waitForEnter();
                     break;
                 };
 
-                const Incident& incident = *cit;
+                const Incident& incident = *incidentPointer;
+                const long long incidentId = incident.getState().id;
+                const Incident::Status incidentStatus = incident.getState().status;
 
                 std::string optionsText = "";
 
-                enum UpdateAction {
-                    AssignTeam,
-                    UnassignTeam,
-                    ResolveIncident,
-                    ReopenIncident,
-                    Cancel,
-                    UpdateActionCount
-                };
-
-                UpdateAction action = UpdateActionCount;
-
-                switch (incident.getState().status) {
+                switch (incidentStatus) {
 
                     case Incident::Status::Open: {
-                        if (incident.isAssignedTeam()) {
-                            optionsText = "1. Assign team\n";
-                            action = AssignTeam;
-                        } else {
-                            optionsText = "1. Unassign team\n";
-                            action = UnassignTeam;
-                        };
+                        optionsText =
+                            "1. Assign team\n"
+                        ;
                         break;
                     };
 
                     case Incident::Status::Assigned: {
-                        optionsText = "1. Resolve incident\n";
-                        action = ResolveIncident;
+                        optionsText =
+                            "1. Unassign team\n"
+                            "2. Resolve incident\n"
+                        ;
                         break;
                     };
 
                     case Incident::Status::Resolved: {
-                        optionsText = "1. Reopen incident\n";
-                        action = ReopenIncident;
+                        optionsText =
+                            "1. Reopen incident\n"
+                        ;
                         break;
                     };
 
@@ -1304,6 +1479,8 @@ int main() {
 
                 };
 
+                optionsText += "0. Cancel";
+
                 std::cout
                     << std::endl
                     << "Incident info:" << std::endl
@@ -1312,31 +1489,73 @@ int main() {
                     << optionsText << std::endl
                 ;
 
-                waitForEnter();
+                const std::string INPUT_OPTION = getUserInput();
 
-                switch (action) {
+                const char INPUT_OPTION_CHAR = INPUT_OPTION.at(0);
 
-                    case UpdateAction::AssignTeam: {
+                switch (incidentStatus) {
+
+                    case Incident::Status::Open: {
+                        if (INPUT_OPTION_CHAR == '1') {
+                            // assign team
+                            const std::string INPUT_TEAM_ID_STRING = getUserInput();
+
+                            bool ok = false;
+
+                            long long inputTeamIdLongLong = stringToLongLong(INPUT_TEAM_ID_STRING, &ok);
+
+                            if (!ok) {
+                                std::cout
+                                    << std::endl
+                                    << "Error: Response team id must be from 1 to " << NUMBER_OF_REPONSE_TEAMS << std::endl
+                                    << std::endl
+                                ;
+                                break;
+                            };
+
+                            const ResponseTeam* responseTeam = responseTeamManager.getResponseTeamById(inputTeamIdLongLong);
+
+                            if (responseTeam == nullptr) {
+                                std::cout
+                                    << std::endl
+                                    << "Response team with id '" << INPUT_TEAM_ID_STRING << "' does not exist" << std::endl
+                                    << std::endl
+                                ;
+                                break;
+                            };
+
+                        };
                         break;
                     };
 
-                    case UpdateAction::UnassignTeam: {
+                    case Incident::Status::Assigned: {
+                        if (INPUT_CHAR == '1') {
+                            // unassign
+                        } else if (INPUT_CHAR == '2') {
+                            // resolve
+                        };
                         break;
                     };
 
-                    case UpdateAction::ResolveIncident: {
+                    case Incident::Status::Resolved: {
+                        if (INPUT_CHAR == '1') {
+                            // reopen
+                        };
                         break;
                     };
 
-                    case UpdateAction::ReopenIncident {
-
-                    };
-
-                    case UpdateAction::Cancel {
-
+                    default: {
+                        if (INPUT_CHAR == '0') {
+                            // cancel
+                        } else {
+                            // Invalid input
+                        };
+                        break;
                     };
 
                 };
+
+                waitForEnter();
 
                 break;
             };

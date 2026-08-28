@@ -19,7 +19,7 @@ Please see my github repo for more info: https://github.com/PastorRowan/COS2611-
 #include <iomanip>
 #include <sstream>
 
-const unsigned int SEED = 0;
+const unsigned int SEED = 1;
 const unsigned int NUMBER_OF_REPONSE_TEAMS = 6;
 const unsigned int NUMBER_OF_INCIDENTS = 10;
 
@@ -319,6 +319,18 @@ class ResponseTeam {
             state.id = newId;
         };
 
+        void setLocationIndex(const LocationIndex newLocationIndex) {
+            state.locationIndex = newLocationIndex;
+        };
+
+        void setCapability(const ServiceType newCapability) {
+            state.capability = newCapability;
+        };
+
+        void setStatus(const Status newStatus) {
+            state.status = newStatus;
+        };
+
         std::string toString(
             const unsigned int idWidth = 5,
             const unsigned int locationWidth = 20,
@@ -386,6 +398,31 @@ class ResponseTeamManager {
         ResponseTeams responseTeams;
         IdGenerator idGenerator;
 
+        ResponseTeam* getResponseTeamPointerById(
+            const long long teamId
+        ) {
+            auto it = std::find_if(
+                responseTeams.begin(),
+                responseTeams.end(),
+                [ teamId ](const auto& responseTeam) -> bool {
+                    return responseTeam.getState().id == teamId;
+                }
+            );
+
+            if (it == responseTeams.end()) {
+                return nullptr;
+            };
+
+            return &(*it);
+
+        };
+
+        ResponseTeam* getResponseTeamById(
+            const long long teamId
+        ) {
+            return getResponseTeamPointerById(teamId);
+        };
+
     public:
 
         ResponseTeamManager(
@@ -399,28 +436,10 @@ class ResponseTeamManager {
             return responseTeams;
         };
 
-        std::string toString() {
-            return responseTeamsToString(responseTeams);
-        };
-
         const ResponseTeam* getResponseTeamById(
             const long long teamId
         ) const {
-
-            const auto cit = std::find_if(
-                responseTeams.cbegin(),
-                responseTeams.cend(),
-                [ teamId ](const auto& responseTeam) -> bool {
-                    return responseTeam.getState().id == teamId;
-                }
-            );
-
-            if (cit == responseTeams.cend()) {
-                return nullptr;
-            };
-
-            return &(*cit);
-
+            return const_cast<ResponseTeamManager*>(this)->getResponseTeamPointerById(teamId);
         };
 
         void addResponseTeam(
@@ -428,6 +447,85 @@ class ResponseTeamManager {
         ) {
             responseTeam.setId(idGenerator.getNextId());
             responseTeams.push_back(responseTeam);
+        };
+
+        void setResponseTeamStatusById(
+            const long long teamId,
+            const ResponseTeam::Status status
+        ) {
+            ResponseTeam* responseTeamPointer = getResponseTeamById(teamId);
+            if (responseTeamPointer == nullptr) {
+                return;
+            };
+            ResponseTeam& resposeTeam = *responseTeamPointer;
+            resposeTeam.setStatus(status);
+        };
+
+        bool doesCapableAndAvailableResponseTeamExist(
+            const ServiceType serviceType
+        ) {
+            for (const auto& responseTeam : responseTeams) {
+                if ((
+                    responseTeam.getState().status == ResponseTeam::Status::Available
+                ) && (
+                    responseTeam.getState().capability == serviceType
+                )) {
+                    return true;
+                };
+            };
+            return false;
+        };
+
+        bool doesResponseTeamExist(
+            const long long teamId
+        ) {
+            const ResponseTeam* responseTeamPointer = getResponseTeamById(teamId);
+            return responseTeamPointer != nullptr;
+        };
+
+        bool isResponseTeamAvailable(
+            const long long teamId
+        ) {
+
+            const ResponseTeam* responseTeamPointer = getResponseTeamById(teamId);
+
+            if (responseTeamPointer == nullptr) {
+                return false;
+            };
+
+            const ResponseTeam responseTeam = *responseTeamPointer;
+
+            if (responseTeam.getState().status != ResponseTeam::Status::Available) {
+                return false;
+            };
+
+            return true;
+
+        };
+
+        bool isResponseTeamCapable(
+            const long long teamId,
+            const ServiceType serviceType
+        ) {
+
+            const ResponseTeam* responseTeamPointer = getResponseTeamById(teamId);
+
+            if (responseTeamPointer == nullptr) {
+                return false;
+            };
+
+            const ResponseTeam responseTeam = *responseTeamPointer;
+
+            if (responseTeam.getState().capability != serviceType) {
+                return false;
+            };
+
+            return true;
+
+        };
+
+        std::string toString() {
+            return responseTeamsToString(responseTeams);
         };
 
         std::string suitableAndAvailableTeamsToString(
@@ -472,7 +570,7 @@ class Incident {
             "High"
         };
 
-        static std::string severityToString(Severity severity) {
+        static std::string severityToString(const Severity severity) {
             return severityStringMap[static_cast<unsigned int>(severity)];
         };
 
@@ -489,13 +587,22 @@ class Incident {
             "Resolved"
         };
 
-        static std::string statusToString(Status status) {
+        static std::string statusToString(const Status status) {
             return statusStringMap[static_cast<unsigned int>(status)];
         };
 
         static const long long UNASSIGNED_ID = -1;
 
         static const long long UNASSIGNED_TEAM_ID = -1;
+
+        static std::string assignedTeamIdToString(
+            const long long assignedTeamId
+        ) {
+            if (assignedTeamId == UNASSIGNED_TEAM_ID) {
+                return "None";
+            };
+            return std::to_string(assignedTeamId);
+        };
 
         struct State {
             long long id = UNASSIGNED_ID;
@@ -542,6 +649,10 @@ class Incident {
             state.assignedTeamId =  newAssignedTeamId;
         };
 
+        void unassignTeam() {
+            state.assignedTeamId = UNASSIGNED_TEAM_ID;
+        };
+
         bool isAssignedId() const {
             return state.id != UNASSIGNED_ID;
         };
@@ -559,7 +670,8 @@ class Incident {
             const unsigned int locationWidth = 20,
             const unsigned int categoryWidth = 15,
             const unsigned int severityWidth = 10,
-            const unsigned int statusWidth = 10
+            const unsigned int statusWidth = 10,
+            const unsigned int teamIdWidth = 15
         ) const {
 
             std::ostringstream output;
@@ -571,6 +683,7 @@ class Incident {
                 << std::setw(categoryWidth) << serviceTypeToString(state.category)
                 << std::setw(severityWidth) << severityToString(state.severity)
                 << std::setw(statusWidth) << statusToString(state.status)
+                << std::setw(teamIdWidth) << assignedTeamIdToString(state.assignedTeamId)
             ;
 
             return output.str();
@@ -598,7 +711,8 @@ std::string incidentsToString(
         LOCATION_WIDTH = 20,
         CATEGORY_WIDTH = 20,
         SEVERITY_WIDTH = 10,
-        STATUS_WIDTH = 10
+        STATUS_WIDTH = 10,
+        TEAM_ID_WIDTH = 15
     ;
 
     std::string incidentsString = "";
@@ -609,7 +723,8 @@ std::string incidentsToString(
             LOCATION_WIDTH,
             CATEGORY_WIDTH,
             SEVERITY_WIDTH,
-            STATUS_WIDTH
+            STATUS_WIDTH,
+            TEAM_ID_WIDTH
         ) + '\n';
     };
 
@@ -621,7 +736,8 @@ std::string incidentsToString(
         << std::setw(LOCATION_WIDTH) << "location"
         << std::setw(CATEGORY_WIDTH) << "category"
         << std::setw(SEVERITY_WIDTH) << "severity"
-        << std::setw(STATUS_WIDTH) << "status" << std::endl
+        << std::setw(STATUS_WIDTH) << "status"
+        << std::setw(TEAM_ID_WIDTH) << "Assigned team" << std::endl
         << incidentsString << std::endl
     ;
 
@@ -702,13 +818,13 @@ class IncidentsManager {
 
         };
 
-        void setIncidentStatus(
-            const long long incidentId,
-            const Incident::Status status
+        void resolveIncident(
+            const long long incidentId
         ) {
             for (auto& incident : incidents) {
                 if (incident.getState().id == incidentId) {
-                    incident.setStatus(status);
+                    incident.setStatus(Incident::Status::Resolved);
+                    incident.unassignTeam();
                     return;
                 };
             };
@@ -721,6 +837,7 @@ class IncidentsManager {
             for (auto& incident : incidents) {
                 if (incident.getState().id == incidentId) {
                     incident.setAssignedTeamId(assignedTeamId);
+                    incident.setStatus(Incident::Status::Assigned);
                     return;
                 };
             };
@@ -731,7 +848,20 @@ class IncidentsManager {
         ) {
             for (auto& incident : incidents) {
                 if (incident.getState().id == incidentId) {
-                    incident.setAssignedTeamId(Incident::UNASSIGNED_TEAM_ID);
+                    incident.unassignTeam();
+                    incident.setStatus(Incident::Status::Open);
+                    return;
+                };
+            };
+        };
+
+        void openIncident(
+            const long long incidentId
+        ) {
+            for (auto& incident : incidents) {
+                if (incident.getState().id == incidentId) {
+                    incident.setStatus(Incident::Status::Open);
+                    incident.unassignTeam();
                     return;
                 };
             };
@@ -1159,7 +1289,8 @@ int main() {
         ResponseTeam randomResponseTeam({
             .locationIndex = ran<LocationIndex>(0, LocationIndexCount - 1),
             .capability = ran<ServiceType>(0, ServiceTypeCount - 1),
-            .status = ran<ResponseTeam::Status>(0, ResponseTeam::StatusCount - 1)
+            .status = ResponseTeam::Status::Available
+            // .status = ran<ResponseTeam::Status>(0, ResponseTeam::Status::StatusCount - 1)
         });
         responseTeamManager.addResponseTeam(randomResponseTeam);
     };
@@ -1270,7 +1401,7 @@ int main() {
                 const std::string DISPLAY_RESPONSE_TEAMS_MENU =
                     HEADER +
                     "========================================\n"
-                    " DISPLAY RESPONSE TEAMS MENU"
+                    " DISPLAY RESPONSE TEAMS MENU\n"
                     "========================================\n"
                     "\n" +
                     responseTeamManager.toString()
@@ -1403,6 +1534,8 @@ int main() {
                     " UPDATE INCIDENT MENU\n"
                     "========================================\n"
                     "\n"
+                    "Incidents:\n" +
+                    incidentsManager.toString() +
                     "Enter incident id: "
                 ;
 
@@ -1413,7 +1546,7 @@ int main() {
 
                 bool ok = false;
 
-                long long inputIdLongLong = stringToLongLong(INPUT_INCIDENT_ID_STRING, &ok);
+                const long long INPUT_INCIDENT_ID_LONG_LONG = stringToLongLong(INPUT_INCIDENT_ID_STRING, &ok);
 
                 if (!ok) {
                     std::cout
@@ -1425,7 +1558,7 @@ int main() {
                     break;
                 };
 
-                const Incident* incidentPointer = incidentsManager.getIncidentById(inputIdLongLong);
+                const Incident* incidentPointer = incidentsManager.getIncidentById(INPUT_INCIDENT_ID_LONG_LONG);
 
                 if (incidentPointer == nullptr) {
                     std::cout
@@ -1439,7 +1572,10 @@ int main() {
 
                 const Incident& incident = *incidentPointer;
                 const long long incidentId = incident.getState().id;
+                const LocationIndex incidentLocationIndex = incident.getState().locationIndex;
+                const ServiceType serviceType = incident.getState().category;
                 const Incident::Status incidentStatus = incident.getState().status;
+                const long long assignedTeamId = incident.getState().assignedTeamId;
 
                 std::string optionsText = "";
 
@@ -1489,6 +1625,10 @@ int main() {
                     << optionsText << std::endl
                 ;
 
+                std::cout
+                    << std::endl
+                    << "Enter option: ";
+                ;
                 const std::string INPUT_OPTION = getUserInput();
 
                 const char INPUT_OPTION_CHAR = INPUT_OPTION.at(0);
@@ -1498,30 +1638,84 @@ int main() {
                     case Incident::Status::Open: {
                         if (INPUT_OPTION_CHAR == '1') {
                             // assign team
-                            const std::string INPUT_TEAM_ID_STRING = getUserInput();
+                            try {
 
-                            bool ok = false;
+                                if (!responseTeamManager.doesCapableAndAvailableResponseTeamExist(serviceType)) {
+                                    std::cout
+                                        << std::endl
+                                        << "No response teams with '" << serviceTypeToString(serviceType) << "' capability are available and exist" << std::endl
+                                        << std::endl
+                                    ;
+                                    break;
+                                };
 
-                            long long inputTeamIdLongLong = stringToLongLong(INPUT_TEAM_ID_STRING, &ok);
-
-                            if (!ok) {
                                 std::cout
-                                    << std::endl
-                                    << "Error: Response team id must be from 1 to " << NUMBER_OF_REPONSE_TEAMS << std::endl
+                                    << "Available and suitable response teams:\n"
+                                    << responseTeamManager.suitableAndAvailableTeamsToString(serviceType)
+                                    << "Enter team id: "
+                                ;
+                                const std::string INPUT_TEAM_ID_STRING = getUserInput();
+
+                                bool ok = false;
+
+                                const long long INPUT_TEAM_ID_LONG_LONG = stringToLongLong(INPUT_TEAM_ID_STRING, &ok);
+
+                                if (!ok) {
+                                    std::cout
+                                        << std::endl
+                                        << "Error: Response team id must be from 1 to " << NUMBER_OF_REPONSE_TEAMS << std::endl
+                                        << std::endl
+                                    ;
+                                    break;
+                                };
+
+                                if (!responseTeamManager.doesResponseTeamExist(INPUT_TEAM_ID_LONG_LONG)) {
+                                    std::cout
+                                        << std::endl
+                                        << "Response team with id '" << INPUT_TEAM_ID_STRING << "' does not exist" << std::endl
+                                        << std::endl
+                                    ;
+                                    break;
+                                };
+
+                                if (!responseTeamManager.isResponseTeamCapable(INPUT_TEAM_ID_LONG_LONG, serviceType)) {
+                                    std::cout
+                                        << std::endl
+                                        << "Response team with id '" << INPUT_TEAM_ID_STRING << "' is not capable of doing this job" << std::endl
+                                        << std::endl
+                                    ;
+                                    break;
+                                };
+
+                                if (!responseTeamManager.isResponseTeamAvailable(INPUT_TEAM_ID_LONG_LONG)) {
+                                    std::cout
+                                        << std::endl
+                                        << "Response team with id '" << INPUT_TEAM_ID_STRING << "' is not available" << std::endl
+                                        << std::endl
+                                    ;
+                                    break;
+                                };
+
+                                incidentsManager.assignTeamToIncident(
+                                    incidentId,
+                                    INPUT_TEAM_ID_LONG_LONG
+                                );
+
+                                responseTeamManager.setResponseTeamStatusById(
+                                    INPUT_TEAM_ID_LONG_LONG,
+                                    ResponseTeam::Status::Assigned
+                                );
+
+                                std::cout
+                                    << "Successfully assigned response team " << INPUT_TEAM_ID_STRING << " to incident " << incidentId << std::endl
                                     << std::endl
                                 ;
-                                break;
-                            };
 
-                            const ResponseTeam* responseTeam = responseTeamManager.getResponseTeamById(inputTeamIdLongLong);
-
-                            if (responseTeam == nullptr) {
+                            } catch(const std::exception& e) {
                                 std::cout
-                                    << std::endl
-                                    << "Response team with id '" << INPUT_TEAM_ID_STRING << "' does not exist" << std::endl
+                                    << "Failed to assign response team to incident " << incidentId << std::endl
                                     << std::endl
                                 ;
-                                break;
                             };
 
                         };
@@ -1529,26 +1723,79 @@ int main() {
                     };
 
                     case Incident::Status::Assigned: {
-                        if (INPUT_CHAR == '1') {
-                            // unassign
-                        } else if (INPUT_CHAR == '2') {
+                        if (INPUT_OPTION_CHAR == '1') {
+                            // unassign team
+                            try {
+                                incidentsManager.unassignTeamFromIncident(incidentId);
+                                responseTeamManager.setResponseTeamStatusById(
+                                    assignedTeamId,
+                                    ResponseTeam::Status::Available
+                                );
+                                std::cout
+                                    << "Successfully unassigned response team " << assignedTeamId << " from incident " << incidentId << std::endl
+                                    << std::endl
+                                ;
+                            } catch(const std::exception& e) {
+                                std::cout
+                                    << std::endl
+                                    << "Failed to unassign team to incident " << incidentId << std::endl
+                                ;
+                            };
+                        } else if (INPUT_OPTION_CHAR == '2') {
                             // resolve
+                            try {
+                                incidentsManager.resolveIncident(incidentId);
+                                responseTeamManager.setResponseTeamStatusById(
+                                    assignedTeamId,
+                                    ResponseTeam::Status::Available
+                                );
+                                std::cout
+                                    << "Successfully resolved incident " << incidentId << std::endl
+                                    << std::endl
+                                ;
+                            } catch(const std::exception& e) {
+                                std::cout
+                                    << std::endl
+                                    << "Failed to resolve incident " << incidentId << std::endl
+                                ;
+                            };
                         };
                         break;
                     };
 
                     case Incident::Status::Resolved: {
-                        if (INPUT_CHAR == '1') {
+                        if (INPUT_OPTION_CHAR == '1') {
                             // reopen
+                            try {
+                                incidentsManager.openIncident(incidentId);
+                                std::cout
+                                    << std::endl
+                                    << "Successfully reopened incident " << incidentId << std::endl
+                                ;
+                            } catch(const std::exception& e) {
+                                std::cout
+                                    << std::endl
+                                    << "Failed to reopen incident " << incidentId << std::endl
+                                ;
+                            };
+                            incidentsManager.openIncident(incidentId);
                         };
                         break;
                     };
 
                     default: {
-                        if (INPUT_CHAR == '0') {
+                        if (INPUT_OPTION_CHAR == '0') {
                             // cancel
+                            std::cout
+                                << std::endl
+                                << "Cancelled incident update" << std::endl
+                            ;
                         } else {
                             // Invalid input
+                            std::cout
+                                << std::endl
+                                << "Input '" << INPUT_OPTION_CHAR << "' was not one of the above displayed options" << std::endl
+                            ;
                         };
                         break;
                     };

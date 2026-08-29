@@ -524,6 +524,34 @@ class ResponseTeamManager {
 
         };
 
+        unsigned int getResponseTeamsCount() const {
+            return responseTeams.size();
+        };
+
+        unsigned int getResponseTeamsCountByCapability(
+            const ServiceType serviceType
+        ) const {
+            return std::count_if(
+                responseTeams.cbegin(),
+                responseTeams.cend(),
+                [ serviceType ](const auto& responseTeam) -> bool {
+                    return responseTeam.getState().capability == serviceType;
+                }
+            );
+        };
+
+        unsigned int getResponseTeamsCountByStatus(
+            const ResponseTeam::Status status
+        ) const {
+            return std::count_if(
+                responseTeams.cbegin(),
+                responseTeams.cend(),
+                [ status ](const auto& responseTeam) -> bool {
+                    return responseTeam.getState().status == status;
+                }
+            );
+        };
+
         std::string toString() {
             return responseTeamsToString(responseTeams);
         };
@@ -752,6 +780,31 @@ class IncidentsManager {
         Incidents incidents;
         IdGenerator idGenerator;
 
+        Incident* getIncidentPointerById(
+            const long long incidentId
+        ) {
+            auto it = std::find_if(
+                incidents.begin(),
+                incidents.end(),
+                [ incidentId ](const auto& incident) -> bool {
+                    return incident.getState().id == incidentId;
+                }
+            );
+
+            if (it == incidents.end()) {
+                return nullptr;
+            };
+
+            return &(*it);
+
+        };
+
+        Incident* getMutableIncidentById(
+            const long long incidentId
+        ) {
+            return getIncidentPointerById(incidentId);
+        };
+
     public:
 
         IncidentsManager(
@@ -761,28 +814,14 @@ class IncidentsManager {
             idGenerator() {
         };
 
-        const Incidents& getIncidents() {
+        const Incidents& getIncidents() const {
             return incidents;
         };
 
         const Incident* getIncidentById(
             const long long incidentId
-        ) {
-
-            const auto cit = std::find_if(
-                incidents.cbegin(),
-                incidents.cend(),
-                [ incidentId ](const auto& incident) -> bool {
-                    return incident.getState().id == incidentId;
-                }
-            );
-
-            if (cit == incidents.cend()) {
-                return nullptr;
-            };
-
-            return &(*cit);
-
+        ) const {
+            return const_cast<IncidentsManager*>(this)->getIncidentPointerById(incidentId);
         };
 
         void addIncident(
@@ -792,11 +831,39 @@ class IncidentsManager {
             incidents.push_back(incident);
         };
 
-        std::string toString() {
+        unsigned int getIncidentsCount() const {
+            return incidents.size();
+        };
+
+        unsigned int getIncidentsCountByStatus(
+            const Incident::Status incidentStatus
+        ) const {
+            return std::count_if(
+                incidents.cbegin(),
+                incidents.cend(),
+                [ incidentStatus ](const auto& incident) -> bool {
+                    return incident.getState().status == incidentStatus;
+                }
+            );
+        };
+
+        unsigned int getIncidentsCountByCategory(
+            const ServiceType serviceType
+        ) const {
+            return std::count_if(
+                incidents.cbegin(),
+                incidents.cend(),
+                [ serviceType ](const auto& incident) -> bool {
+                    return incident.getState().category == serviceType;
+                }
+            );
+        };
+
+        std::string toString() const {
             return incidentsToString(incidents);
         };
 
-        std::string prioritisedIncidentsToString() {
+        std::string prioritisedIncidentsToString() const {
 
             Incidents prioritisedOpenIncidents = {};
 
@@ -821,50 +888,50 @@ class IncidentsManager {
         void resolveIncident(
             const long long incidentId
         ) {
-            for (auto& incident : incidents) {
-                if (incident.getState().id == incidentId) {
-                    incident.setStatus(Incident::Status::Resolved);
-                    incident.unassignTeam();
-                    return;
-                };
+            Incident* incidentPointer = getMutableIncidentById(incidentId);
+            if (incidentPointer == nullptr) {
+                return;
             };
+            Incident& incident = *incidentPointer;
+            incident.setStatus(Incident::Status::Resolved);
+            incident.unassignTeam();
         };
 
         void assignTeamToIncident(
             const long long incidentId,
             const long long assignedTeamId
         ) {
-            for (auto& incident : incidents) {
-                if (incident.getState().id == incidentId) {
-                    incident.setAssignedTeamId(assignedTeamId);
-                    incident.setStatus(Incident::Status::Assigned);
-                    return;
-                };
+            Incident* incidentPointer = getMutableIncidentById(incidentId);
+            if (incidentPointer == nullptr) {
+                return;
             };
+            Incident& incident = *incidentPointer;
+            incident.setAssignedTeamId(assignedTeamId);
+            incident.setStatus(Incident::Status::Assigned);
         };
 
         void unassignTeamFromIncident(
             const long long incidentId
         ) {
-            for (auto& incident : incidents) {
-                if (incident.getState().id == incidentId) {
-                    incident.unassignTeam();
-                    incident.setStatus(Incident::Status::Open);
-                    return;
-                };
+            Incident* incidentPointer = getMutableIncidentById(incidentId);
+            if (incidentPointer == nullptr) {
+                return;
             };
+            Incident& incident = *incidentPointer;
+            incident.unassignTeam();
+            incident.setStatus(Incident::Status::Open);
         };
 
         void openIncident(
             const long long incidentId
         ) {
-            for (auto& incident : incidents) {
-                if (incident.getState().id == incidentId) {
-                    incident.setStatus(Incident::Status::Open);
-                    incident.unassignTeam();
-                    return;
-                };
+            Incident* incidentPointer = getMutableIncidentById(incidentId);
+            if (incidentPointer == nullptr) {
+                return;
             };
+            Incident& incident = *incidentPointer;
+            incident.setStatus(Incident::Status::Open);
+            incident.unassignTeam();
         };
 
 };
@@ -1371,7 +1438,7 @@ int main() {
                     " DISPLAY INCIDENTS MENU\n" +
                     "========================================\n" +
                     "\n" +
-                    incidentsManager.toString() + "\n"
+                    incidentsManager.toString()
                 ;
                 clearScreen();
                 std::cout << DISPLAY_INCIDENTS_MENU;
@@ -1440,11 +1507,12 @@ int main() {
                         << std::endl
                     ;
                     waitForEnter();
+                    break;
                 };
 
-                const Incident* incident = incidentsManager.getIncidentById(inputIdLongLong);
+                const Incident* incidentPointer = incidentsManager.getIncidentById(inputIdLongLong);
 
-                if (incident == nullptr) {
+                if (incidentPointer == nullptr) {
                     std::cout
                         << std::endl
                         << "Incident with id '" << INPUT_INCIDENT_ID_STRING << "' does not exist" << std::endl
@@ -1454,12 +1522,14 @@ int main() {
                     break;
                 };
 
-                const ServiceType serviceType = incident->getState().category;
+                const Incident& incident = *incidentPointer;
+
+                const ServiceType serviceType = incident.getState().category;
 
                 std::cout
                     << std::endl
                     << "Incident info:" << std::endl
-                    << incidentsToString({ *incident })
+                    << incidentsToString({ incident })
                     << "Suitable available teams:" << std::endl
                     << responseTeamManager.suitableAndAvailableTeamsToString(serviceType)
                 ;
@@ -1494,7 +1564,11 @@ int main() {
                 const bool isFromIndexStringValid = roadNetwork.isLocationIndexStringValid(fromIndexString);
 
                 if (!isFromIndexStringValid) {
-                    std::cout << "Error: from index is not one of the above displayed options" << std::endl;
+                    std::cout
+                        << std::endl
+                        << "Error: from index is not one of the above displayed options" << std::endl
+                        << std::endl
+                    ;
                     waitForEnter();
                     break;
                 };
@@ -1808,6 +1882,45 @@ int main() {
             };
 
             case '8': {
+
+                const std::string OPEN_INCIDENTS_COUNT_STRING = std::to_string(incidentsManager.getIncidentsCountByStatus(Incident::Status::Open));
+                const std::string ASSIGNED_INCIDENTS_COUNT_STRING = std::to_string(incidentsManager.getIncidentsCountByStatus(Incident::Status::Assigned));
+                const std::string RESOLVED_INCIDENTS_COUNT_STRING = std::to_string(incidentsManager.getIncidentsCountByStatus(Incident::Status::Resolved));
+                const std::string TOTAL_INCIDENTS_COUNT_STRING = std::to_string(incidentsManager.getIncidentsCount());
+
+                const std::string AVAILABLE_RESPONSE_TEAMS_COUNT_STRING = std::to_string(responseTeamManager.getResponseTeamsCountByStatus(ResponseTeam::Status::Available));
+                const std::string ASSIGNED_RESPONSE_TEAMS_COUNT_STRING = std::to_string(responseTeamManager.getResponseTeamsCountByStatus(ResponseTeam::Status::Assigned));
+                const std::string UNAVAILABLE_RESPONSE_TEAMS_COUNT_STRING = std::to_string(responseTeamManager.getResponseTeamsCountByStatus(ResponseTeam::Status::Unavailable));
+                const std::string RESPONSE_TEAMS_COUNT_STRING = std::to_string(responseTeamManager.getResponseTeamsCount());
+
+                const std::string DISPLAY_SUMMARY_MENU =
+                    HEADER +
+                    "========================================\n"
+                    " DISPLAY SUMMARY MENU\n"
+                    "========================================\n"
+                    "\n"
+                    "----------------------------------------\n"
+                    "Incidents info summary:\n"
+                    " - Open:\t" + OPEN_INCIDENTS_COUNT_STRING + "\n" +
+                    " - Assigned:\t" + ASSIGNED_INCIDENTS_COUNT_STRING + "\n" +
+                    " - Resolved:\t" + RESOLVED_INCIDENTS_COUNT_STRING + "\n" +
+                    "Total:\t" + TOTAL_INCIDENTS_COUNT_STRING + "\n" +
+                    "\n"
+                    "----------------------------------------\n"
+                    "Response teams info summary:\n"
+                    " - Available:\t" + AVAILABLE_RESPONSE_TEAMS_COUNT_STRING + "\n" +
+                    " - Assigned:\t" + ASSIGNED_RESPONSE_TEAMS_COUNT_STRING + "\n" +
+                    " - Unavailable:\t" + UNAVAILABLE_RESPONSE_TEAMS_COUNT_STRING + "\n" +
+                    "Total:\t" + RESPONSE_TEAMS_COUNT_STRING + "\n" +
+                    "\n"
+                    "----------------------------------------\n"
+                    "Team utilisation:\n"
+                    " - Teams currently assigned " + ASSIGNED_RESPONSE_TEAMS_COUNT_STRING + " / " + RESPONSE_TEAMS_COUNT_STRING + "\n"
+                    "\n"
+                ;
+                clearScreen();
+                std::cout << DISPLAY_SUMMARY_MENU;
+                waitForEnter();
                 break;
             };
 
@@ -1835,3 +1948,58 @@ int main() {
     } while (!exit);
 
 };
+
+/*
+SOLUTION REFLECTION
+
+I analysed the problem by first breaking it down into 3 distinct domains:
+- The fixed geographical environment (locations and roads).
+- the randomly generated operational data (incidents and response teams).
+- The interactive management logic (menu options, updates, and queries).
+- I treated the locations and roads as the static "backbone" of the system, because they do not change while the program runs.
+The incidents and teams, however, needed to be updatable and centrally tracked so that status changes
+(like assigning a team) would stay consistent across the whole application.
+
+I decided to represent locations using an enumeration (LocationIndex) rather than strings or integers.
+This gave me compile‑time safety and made it easy to map each location
+to its name, short name,and list of outgoing roads using parallel arrays.
+For the roads, I used an adjacency list stored as an array of vectors (Roads).
+I chose this over an adjacency matrix because the network is relatively sparse (only 15–20 edges),
+so a list saves memory and makes iterating over neighbours straightforward.
+Each Road struct stores the destination index and the travel weight in minutes.
+
+For incidents and response teams, I used classes (Incident and ResponseTeam) that each hold their state in a simple struct.
+This made it easy to group related data while keeping the classes lightweight.
+I then created two manager classes (IncidentsManager and ResponseTeamManager).
+Each manager owns a std::vector of its respective objects and provides methodsfor common operations,
+such as finding an item by ID, counting items by status/capability, and updating state.
+The IdGenerator class provides a clean way to assign unique sequential IDs to both incidents and teams without mixing them.
+
+For the route‑finding problem, I chose Dijkstra's algorithm because the road network has non‑negative travel times,
+and we need the shortest path (minimum total time) between two locations.
+I implemented Dijkstra using a simple linear search over the unvisited set rather than a priority queue.
+This was a deliberate choice:
+- With only 10 locations, the performance difference is negligible.
+- The linear version is easier to read, debug, and verify.
+The algorithm correctly reconstructs the full path by storing predecessors and handles the case where no path exists.
+
+For incident prioritisation (Option 3), I decided that the most critical factor should be severity: High -> Medium -> Low.
+When two incidents have the same severity, I prioritise the one with the larger ID (Acts as a tiebreaker),
+I implemented this by overloading operator< for Incident and then sorting the open incidents in reverse order.
+
+A significant challenge I encountered was maintaining consistency when assigning a team to an incident.
+Specifically, when a team is assigned, the incident must move to "Assigned" and store the team's ID,
+while the team itself must become "Assigned" so it is no longer listed as available.
+Conversely, when an incident is resolved or unassigned, both states must revert correctly.
+I solved this by centralising all state changes inside the manager methods (e.g., IncidentsManager::assignTeamToIncident)
+and making sure that any update to an incident that affects a team is paired with an explicit call to the ResponseTeamManager.
+This way, the program never gets into a state where one object thinks a team is available while the other thinks it is assigned.
+
+Another challenge was validating user input,
+especially when users enter non‑numeric values for IDs.
+I created a helper function (stringToLongLong) that safely attempts conversion and returns a boolean flag to indicate success.
+If the input is invalid, the program displays a clear error message and returns to the menu without crashing.
+I also added checks to ensure that selected incident IDs and team IDs actually exist before performing any operations on them.
+
+I tested my program by ...
+*/

@@ -19,21 +19,37 @@ Please see my github repo for more info: https://github.com/PastorRowan/COS2611-
 #include <iomanip>
 #include <sstream>
 
-const unsigned int SEED = 1;
-const unsigned int NUMBER_OF_REPONSE_TEAMS = 6;
-const unsigned int NUMBER_OF_INCIDENTS = 10;
-
 // Helpers
 
-// Generates a random unsigned integer between min and max (inclusive)
-template <class T = unsigned int>
-T ran(const unsigned int min, const unsigned int max) {
+class RandomNumberGenerator {
 
-    static std::mt19937 gen(SEED);
+    private:
 
-    std::uniform_int_distribution<unsigned int> dist(min, max);
+        std::mt19937 twisterEngine;
 
-    return static_cast<T>(dist(gen));
+    public:
+
+        RandomNumberGenerator(
+            const unsigned int seed = 0
+        ) {
+            seedTwister(seed);
+        };
+
+        void seedTwister(
+            const unsigned int seed
+        ) {
+            twisterEngine.seed(seed); 
+        };
+
+        // Generates a random unsigned integer between min and max (inclusive)
+        template <class T = unsigned int>
+        T ran(const unsigned int min, const unsigned int max) {
+
+            std::uniform_int_distribution<unsigned int> dist(min, max);
+
+            return static_cast<T>(dist(twisterEngine));
+
+        };
 
 };
 
@@ -93,6 +109,26 @@ long long stringToLongLong(
             *ok = false;
         };
         return -1;
+    };
+
+};
+
+unsigned long stringToUnsignedLong(
+    const std::string& str,
+    bool* ok = nullptr
+) {
+
+    if (ok != nullptr) {
+        *ok = true;
+    };
+
+    try {
+        return std::stoul(str);
+    } catch (const std::exception&) {
+        if (ok != nullptr) {
+            *ok = false;
+        };
+        return 0;
     };
 
 };
@@ -1316,22 +1352,33 @@ std::string RoadNetwork::shortestPathToString(
 
 };
 
-int main() {
-    /*
-    enum LocationIndex {
-        FISH_HOEK,
-        NOORDHOEK,
-        SIMONS_TOWN,
-        GLENCAIRN,
-        KALK_BAY,
-        MUIZENBERG,
-        KOMMETJIE,
-        SCARBOROUGH,
-        HOUT_BAY,
-        SMIT_WINKEL_BAY,
-        LocationIndexCount
+int main(int argc, const char* argv[]) {
+
+    if (argc >= 5) {
+        std::cout << "Error: too many arguements provided, only 3 additioanl arguements can be provided excluding the file name";
+        return 1;
     };
-    */
+
+    unsigned int args[argc - 1] = {
+        1,
+        6,
+        10
+    };
+
+    for (unsigned int i = 1; i < argc; ++i) {
+        const std::string currentArgString = argv[i];
+        bool ok = false;
+        const unsigned int currentArgUnsignedInt = stringToUnsignedLong(currentArgString, &ok);
+        if (!ok) {
+            std::cout << "Error: arg " << i << " is not a valid unsigned integer";
+            return 1;
+        };
+        args[i - 1] = currentArgUnsignedInt;
+    };
+
+    const unsigned int SEED = args[0];
+    const unsigned int NUMBER_OF_REPONSE_TEAMS = args[1];
+    const unsigned int NUMBER_OF_INCIDENTS = args[2];
 
     RoadNetwork roadNetwork;
 
@@ -1350,14 +1397,15 @@ int main() {
         roadNetwork.addRoads(currentLocationIndex, currentRoads);
     };
 
+    RandomNumberGenerator randomNumberGenerator(SEED);
+
     ResponseTeamManager responseTeamManager;
 
     for (unsigned int i = 0; i < NUMBER_OF_REPONSE_TEAMS; ++i) {
         ResponseTeam randomResponseTeam({
-            .locationIndex = ran<LocationIndex>(0, LocationIndexCount - 1),
-            .capability = ran<ServiceType>(0, ServiceTypeCount - 1),
-            .status = ResponseTeam::Status::Available
-            // .status = ran<ResponseTeam::Status>(0, ResponseTeam::Status::StatusCount - 1)
+            .locationIndex = randomNumberGenerator.ran<LocationIndex>(0, LocationIndexCount - 1),
+            .capability = randomNumberGenerator.ran<ServiceType>(0, ServiceTypeCount - 1),
+            .status = randomNumberGenerator.ran<ResponseTeam::Status>(0, ResponseTeam::Status::StatusCount - 1)
         });
         responseTeamManager.addResponseTeam(randomResponseTeam);
     };
@@ -1366,9 +1414,9 @@ int main() {
 
     for (unsigned int i = 0; i < NUMBER_OF_INCIDENTS; ++i) {
         Incident randomIncident({
-            .locationIndex = ran<LocationIndex>(0, LocationIndexCount - 1),
-            .category = ran<ServiceType>(0, ServiceTypeCount - 1),
-            .severity = ran<Incident::Severity>(0, Incident::SeverityCount - 1),
+            .locationIndex = randomNumberGenerator.ran<LocationIndex>(0, LocationIndexCount - 1),
+            .category = randomNumberGenerator.ran<ServiceType>(0, ServiceTypeCount - 1),
+            .severity = randomNumberGenerator.ran<Incident::Severity>(0, Incident::SeverityCount - 1),
             .status = Incident::Status::Open
         });
         incidentsManager.addIncident(randomIncident);

@@ -1,4 +1,10 @@
 
+# Ignore Visual Studio Code configuration files
+# These files contain local editor/workspace settings
 /.vscode
 
+# Ignore the batch script used for simulating keyboard input
+/scripts/input.bat
+
+# Ignore compiled executable files
 *.exe

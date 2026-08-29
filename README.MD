@@ -63,6 +63,7 @@ If no arguments are given, the program uses the defaults listed above. Invalid a
 Menu Options
 
 | **Option** | **Description** |
+|---|---|
 | **1** | **Display Locations and Roads** – Shows the road network with travel times. |
 | **2** | **Display Incidents** – Lists all incidents with their details. |
 | **3** | **Prioritise Open Incidents** – Shows open incidents sorted by priority (severity). |

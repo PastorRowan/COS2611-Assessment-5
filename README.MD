@@ -63,11 +63,15 @@ This command:
 
 After compilation, run the program with:
 
+```
 ./25939831_FPP.exe
+```
 
 Alternatively, the provided batch script can be used to compile the application automatically:
 
+```
 scripts/compile.bat
+```
 
 This script will only work if you have the mingw toolchain installed with the corresponding g++ compiler and have g++ available on your system path.
 
@@ -190,9 +194,7 @@ Managers (`IncidentsManager`, `ResponseTeamManager`) handle storage, lookup, and
 
 ## Data Sources
 
-Real‑world geographical information (locations and road connections) was based on:
-
-- Google Maps (road distances and travel times)
+More infromation can be found in 25939831_FPP.cpp
 
 ## Reflection
 

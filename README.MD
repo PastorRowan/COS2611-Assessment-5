@@ -23,19 +23,53 @@ A C++ console application that assists a municipal operations centre in managing
 - **Team assignment:** Suggests suitable available teams based on matching capability; updates incident and team statuses consistently.
 - **Summary display:** Counts of incidents and teams by status.
 
+## Project Structure
+
+```
+project-root/
+│
+├── scripts/                        # Helper scripts for compilation and automated testing
+│   ├── clean_run.bat               # Deletes previous executable, compiles, and runs the application
+│   ├── compile.bat                 # Compiles the application using g++
+│   ├── run.bat                     # Runs the compiled application
+│   └── test.bat                    # Runs the automated application tests
+│
+├── .gitignore.cpp                  # Git ignore rules for project
+├── 25939831_FPP.cpp                # Complete C++ application source code
+├── COS2611-26-Y_Assessment 5.pdf   # COS2611 Assessment 5 assignment specification
+├── LICENSE                         # Project licence
+└── README.md                       # Project documentation
+```
+
 ## Requirements
 
-- C++17 compatible compiler (e.g., `g++`)
+- C++20 compatible compiler (e.g., `g++`)
 - No external libraries or frameworks.
 - Runs as a console application on Windows, Linux, or macOS.
 
 ## Compilation
 
-Compile the single source file using:
+The application is provided as a single C++ source file and requires a C++20-compatible compiler such as `g++`.
 
+For example the command I used to compile the app is:
 ```
-g++ -std=c++17 25939831_FPP.cpp -o municipal_incident_system
+g++ -std=c++20 25939831_FPP.cpp -o 25939831_FPP.exe
 ```
+
+This command:
+- Uses the **C++20** language standard.
+- Compiles `25939831_FPP.cpp`.
+- Produces the executable `25939831_FPP.exe`
+
+After compilation, run the program with:
+
+./25939831_FPP.exe
+
+Alternatively, the provided batch script can be used to compile the application automatically:
+
+scripts/compile.bat
+
+This script will only work if you have the mingw toolchain installed with the corresponding g++ compiler and have g++ available on your system path.
 
 ## Usage
 
@@ -73,6 +107,75 @@ Menu Options
 | **7** | **Update Incident** – Change an incident’s status: assign/unassign team, resolve, or reopen. |
 | **8** | **Display Summary** – Shows counts of open, assigned, resolved incidents and available, assigned, unavailable teams. |
 | **0** | **Exit** – Terminates the program. |
+
+## Testing
+
+The application was tested using a combination of **manual testing** and an **automated batch test script**. Testing was performed against the complete compiled application to verify both individual menu options and the interaction between different parts of the system.
+
+### Test Coverage
+
+The following functionality was tested:
+
+- **Program startup**
+  - Verified that the application starts correctly with default arguments.
+  - Verified that command-line arguments can be used to specify the random seed, number of response teams, and number of incidents.
+  - Verified that invalid command-line arguments are rejected with an appropriate error message.
+
+- **Locations and road network**
+  - Verified that all 10 predefined locations are displayed correctly.
+  - Verified that all predefined roads are displayed with their corresponding travel times.
+  - Verified that road connections are treated as undirected connections.
+  - Verified that the road network is connected.
+
+- **Incident management**
+  - Verified that incidents are generated with valid locations, categories, and severities.
+  - Verified that all incidents initially have an Open status.
+  - Verified that incidents can be investigated using their ID.
+  - Verified that incidents can be assigned, unassigned, resolved, and reopened where appropriate.
+  - Verified that invalid incident IDs are handled correctly.
+
+- **Incident prioritisation**
+  - Verified that only open incidents are included in the prioritised list.
+  - Verified that incidents are ordered from highest to lowest severity.
+  - Verified that incidents with equal severity are ordered by descending incident ID.
+
+- **Response team management**
+  - Verified that the configured number of response teams is generated.
+  - Verified that teams receive valid locations, capabilities, and statuses.
+  - Verified that at least three response teams are initially available.
+  - Verified that suitable available teams are identified based on their service capability.
+  - Verified that assigning and unassigning teams correctly updates both the team and incident status.
+
+- **Route finding**
+  - Verified that valid routes between locations produce a shortest path and total travel time.
+  - Verified that Dijkstra's algorithm produces the minimum-travel-time route.
+  - Verified that a location cannot be selected outside the valid location range.
+  - Verified that invalid route selections are handled without terminating the application.
+
+- **Summary**
+  - Verified that the summary correctly counts incidents by status.
+  - Verified that the summary correctly counts response teams by status.
+  - Verified that the displayed counts change appropriately after incident and team status updates.
+
+- **Menu and input handling**
+  - Verified that all menu options can be selected.
+  - Verified that invalid menu selections are rejected.
+  - Verified that the application remains operational after invalid input.
+  - Verified that the exit option terminates the application correctly.
+
+### Automated Testing
+
+A Windows batch script is included with the project to automate testing of the console application's menu functionality.
+
+The script supplies predefined input to the executable through standard input (`stdin`). This allows repeatable sequences of menu selections and user input to be tested without manually entering every value.
+
+The automated test script also includes delays where necessary to allow the application to process input before the next test input is supplied.
+
+The test script can be found at:
+
+```
+scripts/test.bat
+```
 
 ## Design Overview
 

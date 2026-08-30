@@ -23,7 +23,7 @@ REM 5. Execute the predefined test sequence.
 REM 6. Pipe the simulated input into 25939831_FPP.exe.
 REM 7. Restore the original working directory.
 
-@echo on
+@echo off
 
 REM pushd is used instead of cd so that the original working directory can be restored later using popd.
 pushd "%~dp0"
@@ -98,91 +98,140 @@ REM IMPORTANT:
 REM REM. is used instead of :: or REM for comments inside this piped command block.
 REM :: is technically a label rather than a real comment and can cause
 REM parsing problems inside parenthesised/piped batch blocks and REM also does not work.
-(
 
-    timeout /t %TIMEOUT% /nobreak >nul
+set "RUN_TEST_1=1"
+set "RUN_TEST_2=1"
+set "RUN_TEST_3=1"
+set "RUN_TEST_4=1"
+set "RUN_TEST_5=1"
+set "RUN_TEST_6=1"
+set "RUN_TEST_7=1"
+set "RUN_TEST_8=1"
 
-    REM. Display Locations and Roads menu test
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" ""
+set "EXECUTE_APP=25939831_FPP.exe 1 6 10"
 
-    REM. Display Incidents menu test
-    call "%~dp0input.bat" "2"
-    call "%~dp0input.bat" ""
+REM Display Locations and Roads menu test
+if %RUN_TEST_1%==1 (
+    (
+        timeout /t %TIMEOUT% /nobreak >nul
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" ""
+        call "%~dp0input.bat" "0"
+    ) | %EXECUTE_APP%
+)
 
-    REM. Prioritise Open Incidents menu test
-    call "%~dp0input.bat" "3"
-    call "%~dp0input.bat" ""
+REM Display Incidents menu test
+if %RUN_TEST_2%==1 (
+    (
+        timeout /t %TIMEOUT% /nobreak >nul
+        call "%~dp0input.bat" "2"
+        call "%~dp0input.bat" ""
+        call "%~dp0input.bat" "0"
+    ) | %EXECUTE_APP%
+)
 
-    REM. Display Response Teams menu test
-    call "%~dp0input.bat" "4"
-    call "%~dp0input.bat" ""
+REM Prioritise Open Incidents menu test
+if %RUN_TEST_3%==1 (
+    (
+        timeout /t %TIMEOUT% /nobreak >nul
+        call "%~dp0input.bat" "3"
+        call "%~dp0input.bat" ""
+        call "%~dp0input.bat" "0"
+    ) | %EXECUTE_APP%
+)
 
-    REM. Investigate Incident menu test
-    call "%~dp0input.bat" "5"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" ""
+REM Display Response Teams menu test
+if %RUN_TEST_4%==1 (
+    (
+        timeout /t %TIMEOUT% /nobreak >nul
+        call "%~dp0input.bat" "4"
+        call "%~dp0input.bat" ""
+        call "%~dp0input.bat" "0"
+    ) | %EXECUTE_APP%
+)
 
-    REM. Investigate Incident menu test
-    call "%~dp0input.bat" "6"
-    call "%~dp0input.bat" "0"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" ""
+REM Investigate Incident menu test
+if %RUN_TEST_5%==1 (
+    (
+        timeout /t %TIMEOUT% /nobreak >nul
+        call "%~dp0input.bat" "5"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" ""
+        call "%~dp0input.bat" "0"
+    ) | %EXECUTE_APP%
+)
 
-    REM. Find Route menu test
-    call "%~dp0input.bat" "7"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" ""
+REM Find route menu test
+if %RUN_TEST_6%==1 (
+    (
+        timeout /t %TIMEOUT% /nobreak >nul
+        call "%~dp0input.bat" "6"
+        call "%~dp0input.bat" "0"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" ""
+        call "%~dp0input.bat" "0"
+    ) | %EXECUTE_APP%
+)
 
-    REM. Update Incident menu test
+REM Update Incident menu test
+if %RUN_TEST_7%==1 (
+    (
+        timeout /t %TIMEOUT% /nobreak >nul
 
-    REM. Assign incident response team test
-    call "%~dp0input.bat" "7"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" "3"
-    call "%~dp0input.bat" ""
+        REM. Assign incident response team test
+        call "%~dp0input.bat" "7"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" "3"
+        call "%~dp0input.bat" ""
 
-    REM. Unassign incident response team test
-    call "%~dp0input.bat" "7"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" ""
+        REM. Unassign incident response team test
+        call "%~dp0input.bat" "7"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" ""
 
-    REM. Reassign incident response team test
-    call "%~dp0input.bat" "7"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" "3"
-    call "%~dp0input.bat" ""
+        REM. Reassign incident response team test
+        call "%~dp0input.bat" "7"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" "3"
+        call "%~dp0input.bat" ""
 
-    REM. Resolve incident test
-    call "%~dp0input.bat" "7"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" "2"
-    call "%~dp0input.bat" ""
+        REM. Resolve incident test
+        call "%~dp0input.bat" "7"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" "2"
+        call "%~dp0input.bat" ""
 
-    REM. Reopen incident test
-    call "%~dp0input.bat" "7"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" ""
+        REM. Reopen incident test
+        call "%~dp0input.bat" "7"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" ""
 
-    REM. Cancel incident update test
-    call "%~dp0input.bat" "7"
-    call "%~dp0input.bat" "1"
-    call "%~dp0input.bat" "0"
-    call "%~dp0input.bat" ""
+        REM. Cancel incident update test
+        call "%~dp0input.bat" "7"
+        call "%~dp0input.bat" "1"
+        call "%~dp0input.bat" "0"
+        call "%~dp0input.bat" ""
 
-    REM. Display Summary menu test
-    call "%~dp0input.bat" "8"
-    call "%~dp0input.bat" ""
+        call "%~dp0input.bat" "0"
+    ) | %EXECUTE_APP%
+)
 
-    REM. Exit application
-    call "%~dp0input.bat" "0"
+REM Display Summary menu test
+if %RUN_TEST_8%==1 (
+    (
+        timeout /t %TIMEOUT% /nobreak >nul
+        call "%~dp0input.bat" "8"
+        call "%~dp0input.bat" ""
+        call "%~dp0input.bat" "0"
+    ) | %EXECUTE_APP%
+)
 
-) | 25939831_FPP.exe 1 6 10
+echo.
+echo Finished test script
 
 REM Restore the previous working directory.
 REM

@@ -6,8 +6,8 @@
 :: Change the current working directory to the parent directory of this batch file.
 pushd "%~dp0.."
 
-:: Run the application executable.
-25939831_FPP.exe
+:: Pass all arguments supplied to this batch file to the executable.
+25939831_FPP.exe %*
 
 :: Restore the previous working directory.
 popd

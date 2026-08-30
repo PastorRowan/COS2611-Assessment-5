@@ -13,5 +13,5 @@ if %ERRORLEVEL% neq 0 (
     exit /b %ERRORLEVEL%
 )
 
-:: If compilation was successful, execute run.bat to start the compiled application.
-call "%~dp0run.bat"
+:: If compilation was successful, execute run.bat with all passed arguments supplied to this batch file
+call "%~dp0run.bat" %*

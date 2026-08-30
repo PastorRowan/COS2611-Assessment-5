@@ -3101,5 +3101,24 @@ I created a helper function (stringToLongLong) that safely attempts conversion a
 If the input is invalid, the program displays a clear error message and returns to the menu without crashing.
 I also added checks to ensure that selected incident IDs and team IDs actually exist before performing any operations on them.
 
-I tested my program by ...
+I tested my program by 
+I tested my program by combining manual testing with an automated Windows batch test script.
+Manual testing was used during development to verify individual functions and menu options,
+while the automated test script was used to repeatedly test complete user interaction sequences against the compiled application.
+The testing covered normal and invalid input for all menu options, including displaying the locations and roads, displaying
+incidents and response teams, prioritising incidents, investigating incidents, finding routes, updating incident statuses,
+and displaying the summary. I also specifically tested state transitions involving incident and response team assignment to
+ensure that both objects were updated consistently. For the route-finding functionality, I tested routes between
+multiple locations and compared the resulting paths and travel times against the expected shortest routes through
+the road network. I also tested invalid location selections and ensured that invalid input did not cause the application
+to terminate unexpectedly. The automated test script supplies predefined input to the application through standard
+input (stdin), allowing repeatable tests to be performed without manually entering each value. This was particularly
+useful for testing sequences of related operations, such as assigning a team to an incident and then verifying that the
+resulting status changes were reflected throughout the system. I also tested the application using the assignment's
+required configuration of seed 2611, 6 response teams, and 10 incidents. Because the random-number generator uses a
+fixed seed, the same configuration produces the same operational data on every run, making the results reproducible and
+allowing the automated tests to operate against a predictable scenario. Overall, the testing confirmed that the application's
+core functionality operates correctly, including data generation, incident prioritisation, shortest-path routing,
+team assignment, status management, input validation, and summary calculations. The combination of manual and automated
+testing also helped identify and correct issues with input handling and maintaining consistent state between incidents and response teams.
 */

@@ -3061,10 +3061,10 @@ The incidents and teams, however, needed to be updatable and centrally tracked s
 (like assigning a team) would stay consistent across the whole application.
 
 I decided to represent locations using an enumeration (LocationIndex) rather than strings or integers.
-This gave me compile‑time safety and made it easy to map each location
+This gave me compile-time safety and made it easy to map each location
 to its name and list of outgoing roads using parallel arrays.
 For the roads, I used an adjacency list stored as an array of vectors (Roads).
-I chose this over an adjacency matrix because the network is relatively sparse (only 15–20 edges),
+I chose this over an adjacency matrix because the network is relatively sparse (only 15-20 edges),
 so a list saves memory and makes iterating over neighbours straightforward.
 Each Road struct stores the destination index and the travel weight in minutes.
 
@@ -3075,7 +3075,7 @@ Each manager owns a std::vector of its respective objects and provides methodsfo
 such as finding an item by ID, counting items by status/capability, and updating state.
 The IdGenerator class provides a clean way to assign unique sequential IDs to both incidents and teams without mixing them.
 
-For the route‑finding problem, I chose Dijkstra's algorithm because the road network has non‑negative travel times,
+For the route-finding problem, I chose Dijkstra's algorithm because the road network has non-negative travel times,
 and we need the shortest path (minimum total time) between two locations.
 I implemented Dijkstra using a simple linear search over the unvisited set rather than a priority queue.
 This was a deliberate choice:
@@ -3096,7 +3096,7 @@ and making sure that any update to an incident that affects a team is paired wit
 This way, the program never gets into a state where one object thinks a team is available while the other thinks it is assigned.
 
 Another challenge was validating user input,
-especially when users enter non‑numeric values for IDs.
+especially when users enter non-numeric values for IDs.
 I created a helper function (stringToLongLong) that safely attempts conversion and returns a boolean flag to indicate success.
 If the input is invalid, the program displays a clear error message and returns to the menu without crashing.
 I also added checks to ensure that selected incident IDs and team IDs actually exist before performing any operations on them.

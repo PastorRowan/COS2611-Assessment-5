@@ -47,7 +47,36 @@ project-root/
 - No external libraries or frameworks.
 - Runs as a console application on Windows, Linux, or macOS.
 
-## Compilation
+## Getting started
+
+Follow these steps to build and run the application from a fresh copy of the project.
+
+**1. Clone or Download the Repository**
+
+**Option A – Clone using Git**
+
+If Git is installed, clone the repository using:
+```
+git clone https://github.com/PastorRowan/COS2611-Assessment-5.git
+```
+
+**Option B – Download as a ZIP**
+
+Alternatively, download the repository from GitHub and extract it to a directory of your choice.
+
+After extracting the files, open a terminal in the extracted `COS2611-Assessment-5` directory. This directory should contain `25939831_FPP.cpp`, the `scripts` directory, and the other project files.
+
+**2. Open a Terminal in the Project Directory** 
+
+Navigate to the directory containing `25939831_FPP.cpp`.
+
+For example:
+
+```
+cd path/to/project
+```
+
+**3. Compile the Application**
 
 The application is provided as a single C++ source file and requires a C++20-compatible compiler such as `g++`.
 

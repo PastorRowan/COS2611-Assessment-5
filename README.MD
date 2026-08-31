@@ -62,9 +62,15 @@ git clone https://github.com/PastorRowan/COS2611-Assessment-5.git
 
 **Option B – Download as a ZIP**
 
-Alternatively, download the repository from GitHub and extract it to a directory of your choice.
+Alternatively, download the project directly from GitHub as a ZIP archive:
 
-After extracting the files, open a terminal in the extracted `COS2611-Assessment-5` directory. This directory should contain `25939831_FPP.cpp`, the `scripts` directory, and the other project files.
+1. Open the repository on GitHub.
+2. Click the **Code** button above the list of files.
+3. Select **Download ZIP**.
+4. Extract the downloaded ZIP file to a directory of your choice.
+5. Open a terminal in the extracted `COS2611-Assessment-5` directory.
+
+The extracted directory should contain `25939831_FPP.cpp`, the `scripts` directory, and the other project files.
 
 **2. Open a Terminal in the Project Directory** 
 
